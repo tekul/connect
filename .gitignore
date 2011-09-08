@@ -1,0 +1,14 @@
+.idea/
+.gradle/
+.classpath
+.project
+.scala_dependencies
+build/
+out/
+.DS_Store
+*.iml
+lib_managed/
+target/
+project/boot/
+project/plugins/project/
+project/plugins/src_managed/
