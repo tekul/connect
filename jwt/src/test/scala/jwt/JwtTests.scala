@@ -3,7 +3,6 @@ package jwt
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 import crypto.sign._
-import crypto.codec.{Utf8, Base64}
 
 class JwtTests extends JUnitSuite {
   /**
@@ -19,6 +18,7 @@ class JwtTests extends JUnitSuite {
   @Test def tokenBytesCreateSameToken() {
     val token = Jwt(JOE_HMAC_TOKEN)
     assert(JOE_HMAC_TOKEN === new String(token.bytes, "UTF-8"))
+    assert(JOE_HMAC_TOKEN === token.encoded)
   }
 
   @Test def expectedClaimsValueIsReturned() {

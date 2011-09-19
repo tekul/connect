@@ -15,6 +15,8 @@ trait Jwt extends BinaryFormat {
   def verifySignature(verifier: SignatureVerifier)
 
   def claims: String
+
+  def encoded: String
 }
 
 /**
@@ -122,22 +124,19 @@ private[jwt] class JwtImpl(header: JwtHeader, content: Array[Byte], crypto: Arra
     verifier.verify(signingInput, crypto)
   }
 
-  private[jwt] def signingInput: Array[Byte] = {
-    Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content))
-  }
+  private[jwt] def signingInput: Array[Byte] =
+      Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content))
 
   /**
    * Allows retrieval of the full token.
    *
    * @return the encoded header, claims and crypto segments concatenated with "." characters
    */
-  def bytes: Array[Byte] = {
-    Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content), Jwt.PERIOD, Base64.urlEncode(crypto))
-  }
+  lazy val bytes: Array[Byte] = Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content), Jwt.PERIOD, Base64.urlEncode(crypto))
 
-  override def toString: String = {
-    header + " " + Utf8.decode(content) + " [%s crypto bytes]".format(crypto.length)
-  }
+  lazy val encoded = Utf8.decode(bytes)
+
+  override def toString = header + " " + claims + " [%s crypto bytes]".format(crypto.length)
 }
 
 
