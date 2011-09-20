@@ -16,6 +16,15 @@ class JwtTests extends JUnitSuite {
   val JOE_HEADER_RSA = "{\"alg\":\"RS256\"}"
   val hmac = MacSigner(JwtSpecData.HMAC_KEY)
 
+  @Test def tokenBytesCreateSameToken() {
+    val token = Jwt(JOE_HMAC_TOKEN)
+    assert(JOE_HMAC_TOKEN === new String(token.bytes, "UTF-8"))
+  }
+
+  @Test def expectedClaimsValueIsReturned() {
+    assert(JOE_CLAIM_SEGMENT === Jwt(JOE_HMAC_TOKEN).claims)
+  }
+
   @Test def hmacSignedTokenParsesAndVerifies() {
     Jwt(JOE_HMAC_TOKEN).verifySignature(hmac)
   }
@@ -37,6 +46,7 @@ class JwtTests extends JUnitSuite {
   @Test def hmacVerificationIsInverseOfSigning() {
     val jwt = Jwt(JOE_CLAIM_SEGMENT, hmac)
     jwt.verifySignature(hmac)
+    assert(JOE_CLAIM_SEGMENT === jwt.claims)
   }
 
   import JwtSpecData._
@@ -45,6 +55,7 @@ class JwtTests extends JUnitSuite {
   def rsaSignedTokenParsesAndVerifies() {
     val jwt = Jwt(JOE_RSA_TOKEN)
     jwt.verifySignature(RsaVerifier(N, E))
+    assert(JOE_CLAIM_SEGMENT === jwt.claims)
   }
 
   @Test

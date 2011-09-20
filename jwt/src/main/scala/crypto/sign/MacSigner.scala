@@ -44,4 +44,6 @@ private final class MacSigner(val algorithm: String, key: SecretKey) extends Sig
 
     xor == 0
   }
+
+  override def toString = "MacSigner: " + algorithm
 }

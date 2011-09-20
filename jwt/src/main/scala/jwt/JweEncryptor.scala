@@ -25,7 +25,7 @@ object JweEncryptor {
 
   /**
    * Creates a standard JweEncryptor which uses a standard AES cipher to encrypt the content
-   * and uses the supplied key-encryption cipher to encrypt the generated 256-bit AES key.
+   * and uses the supplied key-encryption cipher (typically RSA) to encrypt the generated 256-bit AES key.
    */
   def apply(keyCipher: EncryptionCipher): JweEncryptor = {
     new StandardJweEncryptor(keyCipher)

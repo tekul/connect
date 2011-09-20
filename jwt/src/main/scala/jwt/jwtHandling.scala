@@ -13,6 +13,8 @@ import java.nio.CharBuffer
  */
 trait Jwt extends BinaryFormat {
   def verifySignature(verifier: SignatureVerifier)
+
+  def claims: String
 }
 
 /**
@@ -56,7 +58,7 @@ object Jwt {
   def apply(content: CharSequence, signer: Signer) = {
     val header = JwtHeader(signer)
     val claims = Utf8.encode(content)
-    val crypto = signer.sign(Array.concat(header.bytes, PERIOD, Base64.urlEncode(claims)))
+    val crypto = signer.sign(Array.concat(Base64.urlEncode(header.bytes), PERIOD, Base64.urlEncode(claims)))
     new JwtImpl(header, claims, crypto)
   }
 }
@@ -76,8 +78,8 @@ private[jwt] object JwtHeader {
   }
 
   def apply(header: String) = {
-    val bytes = Utf8.encode(header)
-    val parameters = parse(Utf8.decode(Base64.decode(bytes))).extract[HeaderParameters]
+    val bytes = Base64.urlDecode(header)
+    val parameters = parse(Utf8.decode(bytes)).extract[HeaderParameters]
     new JwtHeader(bytes, parameters)
   }
 
@@ -85,21 +87,32 @@ private[jwt] object JwtHeader {
     new JwtHeader(HeaderParameters(alg, Some(enc), Some(Utf8.decode(Base64.urlEncode(iv)))))
   }
 
-  def serializeParams(params: HeaderParameters) = Base64.urlEncode(Serialization.write(params))
+  def serializeParams(params: HeaderParameters) = Utf8.encode(Serialization.write(params))
 }
 
 private[jwt] case class HeaderParameters(alg: String, enc: Option[String] = None, iv: Option[String] = None)
 
+/**
+ * Header part of JWT
+ *
+ * @param bytes the decoded header
+ * @param the parameter values contained in the header
+ */
 private[jwt] case class JwtHeader(bytes: Array[Byte], parameters: HeaderParameters) extends BinaryFormat {
   def this(parameters: HeaderParameters) = this(JwtHeader.serializeParams(parameters), parameters)
+
+  override def toString = Utf8.decode(bytes)
 }
 
 /**
  * @param header the header, containing the JWS/JWE algorithm information.
- * @param claims the base64-decoded "claims" segment (may be encrypted, depending on header information).
+ * @param content the base64-decoded "claims" segment (may be encrypted, depending on header information).
  * @param crypto the base64-decoded "crypto" segment.
  */
-private[jwt] class JwtImpl(header: JwtHeader, claims: Array[Byte], crypto: Array[Byte]) extends Jwt {
+private[jwt] class JwtImpl(header: JwtHeader, content: Array[Byte], crypto: Array[Byte]) extends Jwt {
+
+  lazy val claims = Utf8.decode(content)
+
   /**
    * Validates a signature contained in the 'crypto' segment.
    *
@@ -110,7 +123,7 @@ private[jwt] class JwtImpl(header: JwtHeader, claims: Array[Byte], crypto: Array
   }
 
   private[jwt] def signingInput: Array[Byte] = {
-    Array.concat(header.bytes, Jwt.PERIOD, Base64.urlEncode(claims))
+    Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content))
   }
 
   /**
@@ -119,11 +132,11 @@ private[jwt] class JwtImpl(header: JwtHeader, claims: Array[Byte], crypto: Array
    * @return the encoded header, claims and crypto segments concatenated with "." characters
    */
   def bytes: Array[Byte] = {
-    Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(claims), Jwt.PERIOD, Base64.urlEncode(crypto))
+    Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content), Jwt.PERIOD, Base64.urlEncode(crypto))
   }
 
   override def toString: String = {
-    "TODO"
+    header + " " + Utf8.decode(content) + " [%s crypto bytes]".format(crypto.length)
   }
 }
 
