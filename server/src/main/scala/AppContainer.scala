@@ -86,6 +86,11 @@ trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service
           }
       }
 
-    case Path("/logout") => ResponseCookies(Cookie("sid","")) ~> Redirect("/")
+    case Path("/logout") & r =>
+      r.cookies.find(_.name == "sid") match {
+        case Some(sidCookie) => sessions.remove(sidCookie)
+        case None =>
+      }
+      ResponseCookies(Cookie("sid","")) ~> Redirect("/")
   }
 }
