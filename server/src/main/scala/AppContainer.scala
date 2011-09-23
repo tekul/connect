@@ -59,9 +59,6 @@ trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service
 
   def invalidClient = ResponseString("invalid client")
 
-  /**  would normally validate that the scopes are valid for the owner here */
-  def validScopes[T](owner: ResourceOwner, scopes: Option[String], req: Req[T]) = true
-
   def intent = {
     case Path("/") & r => index("", resourceOwner(r))
 
