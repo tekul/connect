@@ -3,7 +3,7 @@ package jwt
 import java.security.SecureRandom
 import crypto.cipher.{AesCipher, EncryptionCipher}
 import JwtAlgorithms._
-import crypto.codec.{Base64, Utf8}
+import crypto.codec.Codecs._
 
 /**
  * Encrypts JWTs using JWE-defined hybrid-encryption algorithms.
@@ -17,7 +17,7 @@ trait JweEncryptor {
   }
 
   def encrypt(content: CharSequence): Jwt = {
-    encrypt(Utf8.encode(content))
+    encrypt(utf8Encode(content))
   }
 }
 
@@ -46,6 +46,6 @@ private class StandardJweEncryptor(keyCipher: EncryptionCipher) extends JweEncry
     val ciphertext = cipher.encrypt(content, Some(iv))
     val encryptedKey = keyCipher.encrypt(key)
 
-    new JwtImpl(JwtHeader(alg, enc(cipher), Base64.urlEncode(iv)), ciphertext, encryptedKey)
+    new JwtImpl(JwtHeader(alg, enc(cipher), b64UrlEncode(iv)), ciphertext, encryptedKey)
   }
 }

@@ -1,7 +1,6 @@
 package jwt
 
-import crypto.codec.Base64
-import crypto.codec.Utf8
+import crypto.codec.Codecs._
 import crypto.sign.SignatureVerifier
 import crypto.sign.Signer
 import java.nio.CharBuffer
@@ -23,7 +22,7 @@ trait Jwt extends BinaryFormat {
  * Helper object for creating and manipulating JWTs.
  */
 object Jwt {
-  private[jwt] val PERIOD: Array[Byte] = Utf8.encode(".")
+  private[jwt] val PERIOD: Array[Byte] = utf8Encode(".")
 
   /**
    * Creates a token from an encoded token string.
@@ -39,14 +38,14 @@ object Jwt {
     val header = JwtHeader(buffer.toString)
 
     buffer.limit(lastPeriod).position(firstPeriod + 1)
-    val claims = Base64.urlDecode(buffer)
+    val claims = b64UrlDecode(buffer)
     val emptyCrypto = lastPeriod == token.length - 1
     val crypto = if (emptyCrypto) {
       require(header.parameters.alg == "none", "Signed or encrypted token must have non-empty crypto segment")
       new Array[Byte](0)
     } else {
       buffer.limit(token.length).position(lastPeriod + 1)
-      Base64.urlDecode(buffer)
+      b64UrlDecode(buffer)
     }
     new JwtImpl(header, claims, crypto);
   }
@@ -59,8 +58,8 @@ object Jwt {
    */
   def apply(content: CharSequence, signer: Signer) = {
     val header = JwtHeader(signer)
-    val claims = Utf8.encode(content)
-    val crypto = signer.sign(Array.concat(Base64.urlEncode(header.bytes), PERIOD, Base64.urlEncode(claims)))
+    val claims = utf8Encode(content)
+    val crypto = signer.sign(Array.concat(b64UrlEncode(header.bytes), PERIOD, b64UrlEncode(claims)))
     new JwtImpl(header, claims, crypto)
   }
 }
@@ -80,16 +79,16 @@ private[jwt] object JwtHeader {
   }
 
   def apply(header: String) = {
-    val bytes = Base64.urlDecode(header)
-    val parameters = parse(Utf8.decode(bytes)).extract[HeaderParameters]
+    val bytes = b64UrlDecode(header)
+    val parameters = parse(utf8Decode(bytes)).extract[HeaderParameters]
     new JwtHeader(bytes, parameters)
   }
 
   def apply(alg: String, enc: String, iv: Array[Byte]): JwtHeader = {
-    new JwtHeader(HeaderParameters(alg, Some(enc), Some(Utf8.decode(Base64.urlEncode(iv)))))
+    new JwtHeader(HeaderParameters(alg, Some(enc), Some(utf8Decode(b64UrlEncode(iv)))))
   }
 
-  def serializeParams(params: HeaderParameters) = Utf8.encode(Serialization.write(params))
+  def serializeParams(params: HeaderParameters) = utf8Encode(Serialization.write(params))
 }
 
 private[jwt] case class HeaderParameters(alg: String, enc: Option[String] = None, iv: Option[String] = None)
@@ -103,7 +102,7 @@ private[jwt] case class HeaderParameters(alg: String, enc: Option[String] = None
 private[jwt] case class JwtHeader(bytes: Array[Byte], parameters: HeaderParameters) extends BinaryFormat {
   def this(parameters: HeaderParameters) = this(JwtHeader.serializeParams(parameters), parameters)
 
-  override def toString = Utf8.decode(bytes)
+  override def toString = utf8Decode(bytes)
 }
 
 /**
@@ -113,7 +112,7 @@ private[jwt] case class JwtHeader(bytes: Array[Byte], parameters: HeaderParamete
  */
 private[jwt] class JwtImpl(header: JwtHeader, content: Array[Byte], crypto: Array[Byte]) extends Jwt {
 
-  lazy val claims = Utf8.decode(content)
+  lazy val claims = utf8Decode(content)
 
   /**
    * Validates a signature contained in the 'crypto' segment.
@@ -125,16 +124,16 @@ private[jwt] class JwtImpl(header: JwtHeader, content: Array[Byte], crypto: Arra
   }
 
   private[jwt] def signingInput: Array[Byte] =
-      Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content))
+      Array.concat(b64UrlEncode(header.bytes), Jwt.PERIOD, b64UrlEncode(content))
 
   /**
    * Allows retrieval of the full token.
    *
    * @return the encoded header, claims and crypto segments concatenated with "." characters
    */
-  lazy val bytes: Array[Byte] = Array.concat(Base64.urlEncode(header.bytes), Jwt.PERIOD, Base64.urlEncode(content), Jwt.PERIOD, Base64.urlEncode(crypto))
+  lazy val bytes: Array[Byte] = Array.concat(b64UrlEncode(header.bytes), Jwt.PERIOD, b64UrlEncode(content), Jwt.PERIOD, b64UrlEncode(crypto))
 
-  lazy val encoded = Utf8.decode(bytes)
+  lazy val encoded = utf8Decode(bytes)
 
   override def toString = header + " " + claims + " [%s crypto bytes]".format(crypto.length)
 }

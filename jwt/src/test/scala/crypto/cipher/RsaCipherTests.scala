@@ -3,7 +3,7 @@ package crypto.cipher
 import java.security.interfaces.{RSAPrivateKey, RSAPublicKey}
 import org.scalatest.junit.JUnitSuite
 import org.junit.{Test, Before}
-import crypto.codec.Utf8
+import crypto.codec.Codecs._
 
 class RsaCipherTests extends JUnitSuite {
   private var publicKey: RSAPublicKey = null
@@ -29,7 +29,7 @@ class RsaCipherTests extends JUnitSuite {
     val pb = RsaEncryptor(publicKey)
     val pr = RsaDecryptor(privateKey)
     val plaintext = "Hi there, I'm the secret message!!!"
-    val ciphertext = pb.encrypt(Utf8.encode(plaintext))
-    assert (plaintext === Utf8.decode(pr.decrypt(ciphertext)))
+    val ciphertext = pb.encrypt(utf8Encode(plaintext))
+    assert (plaintext === utf8Decode(pr.decrypt(ciphertext)))
   }
 }

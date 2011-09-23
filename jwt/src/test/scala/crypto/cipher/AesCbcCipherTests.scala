@@ -3,7 +3,7 @@ package crypto.cipher
 import java.util.Arrays
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import crypto.codec.Utf8
+import crypto.codec.Codecs._
 
 /**
  * @author Luke Taylor
@@ -33,8 +33,8 @@ class AesCbcCipherTests extends JUnitSuite {
     Arrays.fill(iv, 37.asInstanceOf[Byte])
     val cipher = AesCipher(key)
     val plaintext = "Hi there, I'm the secret message!!!"
-    val ciphertext = cipher.encrypt(Utf8.encode(plaintext), iv)
+    val ciphertext = cipher.encrypt(utf8Encode(plaintext), iv)
 
-    assert(plaintext === Utf8.decode(cipher.decrypt(ciphertext, iv)))
+    assert(plaintext === utf8Decode(cipher.decrypt(ciphertext, iv)))
   }
 }
