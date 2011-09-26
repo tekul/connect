@@ -7,6 +7,10 @@ case class AppToken(value: String, clientId: String, scopes: Seq[String],
        def expiresIn = Some(3600)
   // We only support bearer tokens for access tokens. TODO: Authorization tokens should not support this
        def tokenType = "bearer"
+       override val extras = idToken match {
+         case Some(idt) => Map("id_token" -> idt)
+         case None => Map.empty[String, String]
+       }
      }
 
 /**

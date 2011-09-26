@@ -2,7 +2,7 @@ package openid
 
 import unfiltered.filter.request.ContextPath
 import unfiltered.oauth2.OAuthResourceOwner
-import unfiltered.response.{Json, ResponseString}
+import unfiltered.response._
 import net.liftweb.json.JsonDSL._
 
 object OpenID {
@@ -35,15 +35,23 @@ trait DefaultUserInfoEndPoint extends UserInfoEndPoint {
 /**
  * Handles request to the OpenID connect endpoints.
  */
-trait UserInfoPlan extends unfiltered.filter.Plan with UserInfoEndPoint {
+trait UserInfoPlan extends unfiltered.filter.Plan with UserInfoEndPoint { // with Logger {
   val userInfoService: UserInfoService
+
+  import net.liftweb.json._
+  implicit val formats = Serialization.formats(NoTypeHints)
 
   def intent = {
     case req @ ContextPath(_, UserInfoPath) => req match {
       // Extract the access-token authorized user information
       case OAuthResourceOwner(id, scopes) =>
 
-//        userInfoService.userInfo(id,  )
+        userInfoService.userInfo(id, scopes.get.split(" ")) match {
+          case Some(user) => Json(Serialization.write(user))
+          case None =>
+//            logger.warn("Resource owner " + id + " not found in OpenID users")
+            InternalServerError
+        }
 
         // 1. get user profile from ID/scopes combination
         // 2. render as JSON or JWT

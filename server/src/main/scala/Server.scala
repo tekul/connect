@@ -84,7 +84,23 @@ object Server {
     }
   }
 
-//  val openIDConnect = new OpenIDConnectPlan with DefaultOpenIDEndPoints
+  import openid._
+
+  object TestUsers extends UserInfoService {
+    val users = Map(
+      "john" -> UserProfile("john", "John Coltrane", "John", "Coltrane", Some("William"), "Trane",
+        Some("http://en.wikipedia.org/wiki/John_Coltrane"),None, None, "jc@trane.jaz", false,  "male",
+        Some("09/23/1926"), "America/New_York","en_US", None, Some(Address("1511 North Thirty-third Street", "Philadelphia", None, None, "USA", None)),
+        "2011-09-25T23:58:42+0000."))
+
+    override def userInfo(id: String, scopes: Seq[String]): Option[UserInfo] = {
+      users.get(id)
+    }
+  }
+
+  val openIDConnect = new UserInfoPlan with DefaultUserInfoEndPoint {
+    val userInfoService = TestUsers
+  }
 
   val oauth2 = new Authorized with DefaultAuthorizationPaths with DefaultValidationMessages {
     val auth = Auth.authServer
