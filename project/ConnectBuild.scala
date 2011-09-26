@@ -59,22 +59,25 @@ object Dependencies {
 
   val lift_json  = "net.liftweb" %% "lift-json" % "2.4-SNAPSHOT"
 
-  val ufversion = "0.5.0-OPENID"
-  val uffilter = "net.databinder" %% "unfiltered-filter" % ufversion
-  val ufjson = "net.databinder" %% "unfiltered-json" % ufversion
-  val ufoa2 = "net.databinder" %% "unfiltered-oauth2" % ufversion
+  val ufversion = "0.5.0-OAUTH2"
+
+  val ufDeps = Seq(
+    "net.databinder" %% "unfiltered-filter" % ufversion,
+    "net.databinder" %% "unfiltered-json" % ufversion intransitive(),
+    "net.databinder" %% "unfiltered-oauth2" % ufversion,
 
   // Add jetty for compile time servletapi dep
-  val ufjetty = "net.databinder" %% "unfiltered-jetty" % ufversion
-  val ufspec = "net.databinder" %% "unfiltered-spec" % ufversion % "test"
+    "net.databinder" %% "unfiltered-jetty" % ufversion,
+    "net.databinder" %% "unfiltered-spec" % ufversion % "test"
+  )
 
   val dispatchVersion = "0.8.5"
-  def dispatchDeps =
-    "net.databinder" %% "dispatch-core" % dispatchVersion ::
-    "net.databinder" %% "dispatch-mime" % dispatchVersion ::
-    "net.databinder" %% "dispatch-http" % dispatchVersion ::
-    "net.databinder" %% "dispatch-json" % dispatchVersion ::
-    "net.databinder" %% "dispatch-lift-json" % dispatchVersion :: Nil
+  def dispatchDeps = Seq(
+    "net.databinder" %% "dispatch-core" % dispatchVersion,
+    "net.databinder" %% "dispatch-mime" % dispatchVersion,
+    "net.databinder" %% "dispatch-http" % dispatchVersion,
+    "net.databinder" %% "dispatch-json" % dispatchVersion,
+    "net.databinder" %% "dispatch-lift-json" % dispatchVersion intransitive())
 }
 
 object ConnectBuild extends Build {
@@ -84,8 +87,6 @@ object ConnectBuild extends Build {
 //  val springSecDeps = Seq(springSecurityCore, springSecurityWeb, springSecurityConfig, springSecurityOauth2)
   val testDeps = Seq(junit, scalaTest, mockito)
   val loggingDeps = Seq(slf4j, jcl, logback)
-
-  val ufDeps = Seq(uffilter,ufoa2,ufspec,ufjson, ufjetty)
 
   lazy val connect = Project("connect",
     file("."),
