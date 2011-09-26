@@ -32,19 +32,21 @@ trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service
 
   def resourceOwner(userName: String, password: String): Option[ResourceOwner] = throw new UnsupportedOperationException
 
-
+  // TODO: More robust acceptance checking
   def accepted[T](r: Req[T]) = r match {
-    case Params(p) => p("submit") match {
+    case POST(_) & Params(p) => p("submit") match {
       case Seq(ApproveKey) => true
       case _ => false
     }
+    case _ => false
   }
 
   def denied[T](r: Req[T]) = r match {
-    case Params(p) => p("submit") match {
+    case POST(_) & Params(p) => p("submit") match {
       case Seq(DenyKey) => true
       case _ => false
     }
+    case _ => false
   }
 
 
