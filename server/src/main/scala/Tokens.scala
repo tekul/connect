@@ -70,7 +70,7 @@ trait Tokens extends TokenStore with Logger {
     at
   }
 
-  def generateAuthorizationCode(owner: ResourceOwner, client: Client, responseTypes: Seq[String],
+  def generateAuthorizationCode(responseTypes: Seq[String], owner: ResourceOwner, client: Client,
                         scopes: Seq[String], redirectURI: String) = {
     val ct = CodeToken(responseTypes, randomUUID.toString, client.id, scopes, redirectURI, owner.id)
     codeTokens.put(ct.value, ct)
@@ -84,7 +84,7 @@ trait Tokens extends TokenStore with Logger {
     at
   }
 
-  def generateImplicitAccessToken(owner: ResourceOwner, client: Client,
+  def generateImplicitAccessToken(responseTypes: Seq[String], owner: ResourceOwner, client: Client,
                                   scopes: Seq[String], redirectURI: String) = {
     val at = AppToken(randomUUID.toString, client.id, scopes, redirectURI, owner.id)
     accessTokens.put(at.value, at)

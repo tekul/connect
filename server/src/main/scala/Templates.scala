@@ -56,7 +56,7 @@ trait Templates {
     <div>
      <form action="/login" method="POST">
       <p>Sign in. A 3rd party application would like access to your data</p>
-      <input type="hidden" name="response_type" value={bundle.responseType} />
+      <input type="hidden" name="response_type" value={bundle.responseTypes.mkString(" ")} />
       <input type="hidden" name="client_id" value={bundle.client.id} />
       <input type="hidden" name="redirect_uri" value={bundle.redirectUri} />
 
@@ -74,7 +74,7 @@ trait Templates {
           A 3rd party application named <strong>{bundle.client.id}</strong> has requested access to your data.
         </p>
 
-        <input type="hidden" name="response_type" value={bundle.responseType} />
+        <input type="hidden" name="response_type" value={bundle.responseTypes.mkString(" ")} />
         <input type="hidden" name="client_id" value={bundle.client.id} />
         <input type="hidden" name="redirect_uri" value={bundle.redirectUri} />
 
