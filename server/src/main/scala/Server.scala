@@ -1,5 +1,5 @@
 import crypto.sign.RsaSigner
-import unfiltered.oauth2.ResourceOwner
+import unfiltered.jetty.{Server => JServer}
 import unfiltered.request._
 import unfiltered.oauth2._
 import net.liftweb.json.JsonAST._
@@ -92,13 +92,8 @@ object Server {
 
   val tokenAuthorization = Protection(new MyAuthSource(Auth.authServer))
 
-  def main(args: Array[String]) {
-    new java.util.Timer().schedule(new java.util.TimerTask() {
-      def run() { unfiltered.util.Browser.open("http://localhost:%s/" format port) }
-    }, 1000)
-
-    unfiltered.jetty.Http(port)
-      .resources(Server.resources)
+  def configureServer(server: JServer): JServer = {
+    server.resources(Server.resources)
       .context("/oauth") {
         _.filter(oauth2)
       }
@@ -110,6 +105,15 @@ object Server {
       .context("/api") {
         _.filter(tokenAuthorization)
          .filter(new Api)
-      }.run()
+      }
+    server
+  }
+
+  def main(args: Array[String]) {
+    new java.util.Timer().schedule(new java.util.TimerTask() {
+      def run() { unfiltered.util.Browser.open("http://localhost:%s/" format port) }
+    }, 1000)
+
+    configureServer(unfiltered.jetty.Http(port)).run()
   }
 }
