@@ -9,6 +9,7 @@ out/
 *.iml
 lib_managed/
 target/
+.target/
 project/boot/
 project/plugins/project/
 project/plugins/src_managed/
