@@ -57,7 +57,7 @@ object Dependencies {
 
   val cglib      = "cglib" % "cglib-nodep" % "2.2.2" % "runtime->default"
 
-  val lift_json  = "net.liftweb" %% "lift-json" % "2.4-SNAPSHOT"
+  val lift_json  = "net.liftweb" %% "lift-json" % "2.4-M4"
 
   val ufversion = "0.5.0-OAUTH2"
 
