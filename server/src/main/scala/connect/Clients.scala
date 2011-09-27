@@ -1,3 +1,5 @@
+package connect
+
 import unfiltered.oauth2.{Client, ClientStore}
 
 case class AppClient(id: String, secret: String, redirectUri: String) extends Client

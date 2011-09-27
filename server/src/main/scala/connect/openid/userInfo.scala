@@ -1,4 +1,4 @@
-package openid
+package connect.openid
 
 
 trait UserInfo
@@ -17,7 +17,7 @@ case class UserProfile(id: String,
                        picture: Option[String],
                        website: Option[String],
                        email: String,
-                       verified: Boolean,
+                       verified: Option[Boolean],
                        gender: String,
                        birthday: Option[String],
                        zoneinfo: String,

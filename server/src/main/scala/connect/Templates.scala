@@ -1,3 +1,5 @@
+package connect
+
 
 trait Templates {
   import unfiltered.response._

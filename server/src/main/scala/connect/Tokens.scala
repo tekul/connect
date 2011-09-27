@@ -1,3 +1,5 @@
+package connect
+
 import unfiltered.oauth2.{Client, ResourceOwner, Token, TokenStore}
 
 case class AppToken(value: String, clientId: String, scopes: Seq[String],

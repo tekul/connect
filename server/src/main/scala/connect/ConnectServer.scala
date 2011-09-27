@@ -1,5 +1,7 @@
+package connect
+
 import crypto.sign.RsaSigner
-import unfiltered.jetty.{Server => JServer}
+import unfiltered.jetty.Server
 import unfiltered.request._
 import unfiltered.oauth2._
 import net.liftweb.json.JsonAST._
@@ -12,7 +14,7 @@ import jwt.Jwt
  * Sample OpenID connect server, based on the OAuth2 sample at
  * https://github.com/softprops/unfiltered-oauth2-server.g8.git
  */
-object Server {
+object ConnectServer {
   val resources = new java.net.URL(getClass.getResource("/web/robots.txt"), ".")
   val port = 8080
 
@@ -42,7 +44,7 @@ object Server {
     def generateIdToken(token: Token) = {
       val expiry = System.currentTimeMillis()/1000 + 600
       val jwt = Jwt(compact(render(
-      ("iss" -> "CID") ~
+      ("iss" -> "CFID") ~
       ("user_id" -> token.owner) ~
       ("aud" -> token.clientId) ~
       ("exp" -> expiry)
@@ -64,15 +66,14 @@ object Server {
    * reading it from the TokenStore and returning the resource owner and scope information.
    */
   class MyAuthSource(tokenStore: Tokens) extends AuthSource with Logger {
-    def authenticateToken[T](token: AccessToken, request: HttpRequest[T]): Either[String, (ResourceOwner, Option[String])] = {
+    def authenticateToken[T](token: AccessToken, request: HttpRequest[T]): Either[String, (ResourceOwner, Seq[String])] = {
       logger.debug("Authenticating token " +  token)
       token match {
         case BearerToken(value) =>
           tokenStore.accessToken(value) match {
             case Some(appToken) =>
               logger.debug("Found token from client %s authorized by %s" format(appToken.clientId, appToken.owner))
-              // TODO: API should use Seq[String] for scopes
-              Right(new User(appToken.owner, None), Some(appToken.scopes.mkString(" ")))
+              Right(new User(appToken.owner, None), appToken.scopes)
             case None =>
               logger.debug("No matching token found")
               Left("Bad token")
@@ -85,20 +86,52 @@ object Server {
   }
 
   import openid._
+  import net.liftweb.json._
+//  import net.liftweb.json.JsonDSL._
+  implicit val formats = DefaultFormats
+
 
   object TestUsers extends UserInfoService {
+    val JohnColtrane = """{
+       "id": "john",
+       "name": "John Coltrane",
+       "given_name": "John",
+       "family_name": "Coltrane",
+       "middle_name": "William",
+       "nickname": "Trane",
+       "profile": "http://en.wikipedia.org/wiki/John_Coltrane",
+       "picture": "http://www.johncoltrane.com/images/p5.jpg",
+       "website": "http://www.johncoltrane.com/",
+       "email": "jc@trane.jazz",
+       "gender": "male",
+       "birthday": "09/23/1926",
+       "zoneinfo": "America/New_York",
+       "locale": "en_US",
+       "phone_number": "1234 5678",
+       "updated_time": "2011-09-25T23:58:42+0000"
+     }"""
+
+//       "address": {
+//         "street_address": "1511 North Thirty-third Street",
+//         "locality:" "Philadelphia",
+//         "country": "USA"
+//       }
+
     val users = Map(
-      "john" -> UserProfile("john", "John Coltrane", "John", "Coltrane", Some("William"), "Trane",
-        Some("http://en.wikipedia.org/wiki/John_Coltrane"),None, None, "jc@trane.jaz", false,  "male",
-        Some("09/23/1926"), "America/New_York","en_US", None, Some(Address("1511 North Thirty-third Street", "Philadelphia", None, None, "USA", None)),
-        "2011-09-25T23:58:42+0000."))
+      "john" -> parse(JohnColtrane).extract[UserProfile]
+    )
+
+//        UserProfile("john", "John Coltrane", "John", "Coltrane", Some("William"), "Trane",
+//        Some(),None, None, "", false,  "male",
+//        Some("09/23/1926"), "America/New_York","en_US", None, Some(Address("1511 North Thirty-third Street", "Philadelphia", None, None, "USA", None)),
+//        "2011-09-25T23:58:42+0000."))
 
     override def userInfo(id: String, scopes: Seq[String]): Option[UserInfo] = {
       users.get(id)
     }
   }
 
-  val openIDConnect = new UserInfoPlan with DefaultUserInfoEndPoint {
+  val userInfo = new UserInfoPlan with DefaultUserInfoEndPoint {
     val userInfoService = TestUsers
   }
 
@@ -108,16 +141,16 @@ object Server {
 
   val tokenAuthorization = Protection(new MyAuthSource(Auth.authServer))
 
-  def configureServer(server: JServer): JServer = {
-    server.resources(Server.resources)
+  def configureServer(server: Server): Server = {
+    server.resources(ConnectServer.resources)
       .context("/oauth") {
         _.filter(oauth2)
       }
       .filter(Auth.authServer) // Login etc
-//      .context("/openid") {
-//        _.filter(tokenAuthorization)
-//        .filter(openIDConnect)
-//      }
+      .context("/openid") {
+        _.filter(tokenAuthorization)
+        .filter(userInfo)
+      }
       .context("/api") {
         _.filter(tokenAuthorization)
          .filter(new Api)

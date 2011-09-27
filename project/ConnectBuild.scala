@@ -72,12 +72,14 @@ object Dependencies {
   )
 
   val dispatchVersion = "0.8.5"
-  def dispatchDeps = Seq(
+  val dispatchDeps = Seq(
     "net.databinder" %% "dispatch-core" % dispatchVersion,
     "net.databinder" %% "dispatch-mime" % dispatchVersion,
     "net.databinder" %% "dispatch-http" % dispatchVersion,
     "net.databinder" %% "dispatch-json" % dispatchVersion,
     "net.databinder" %% "dispatch-lift-json" % dispatchVersion intransitive())
+
+  val integrationTestDeps = dispatchDeps map { _ % "test" }
 }
 
 object ConnectBuild extends Build {
@@ -103,7 +105,7 @@ object ConnectBuild extends Build {
   lazy val server = Project("server",
     file("server"),
     settings = buildSettings ++ Seq(
-      libraryDependencies ++= testDeps ++ loggingDeps ++ ufDeps ++ Seq(lift_json)
+      libraryDependencies ++= testDeps ++ loggingDeps ++ ufDeps ++ Seq(lift_json) ++ integrationTestDeps
     )
   ) dependsOn(jwt)
 

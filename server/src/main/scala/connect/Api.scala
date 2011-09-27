@@ -1,3 +1,5 @@
+package connect
+
 import unfiltered.filter.request.ContextPath
 import unfiltered.request._
 import unfiltered.response._
