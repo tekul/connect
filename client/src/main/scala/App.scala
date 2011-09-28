@@ -32,17 +32,17 @@ class App extends Templates with unfiltered.filter.Plan {
   }
 
   def intent = {
-    // if we have an access token on hand, make an api call
+    // if we have an access token on hand, make a user info endpoint call
     // if not, render the current list of tokens
     case GET(Path("/") & AuthorizedToken(at)) =>
       try {
-        Http(svc / "api" / "users" / "1" <:< Map("Authorization" -> ("Bearer " + at.value)) ># { js =>
+        Http(svc / "openid" / "userinfo" <:< Map("Authorization" -> ("Bearer " + at.value)) ># { js =>
           val response = pretty(render(js))
-          apiCall(response)
+          userInfo(response)
         })
       } catch { case e =>
         val msg = "there was an error making an api request: %s" format e.getMessage
-        apiCall(msg)
+        userInfo(msg)
       }
 
     // show a list of tokens, if any, and a way to connect

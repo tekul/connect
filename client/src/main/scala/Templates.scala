@@ -6,24 +6,24 @@ trait Templates {
     <html>
       <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        <title>oauth client - trustly</title>
+        <title>OAuth2/OpenIDConnect Client</title>
         <link href="/css/app.css" type="text/css" rel="stylesheet"/>
       </head>
       <body>
         <div id="container">
-          <h1><a href="/">oauth client - trustly</a></h1>
+          <h1><a href="/">OAuth2/OpenIDConnect Client</a></h1>
           {body}
         </div>
       </body>
     </html>
   )
 
-  def index = page(<a href={"http://localhost:%s/" format Client.port} >connect with provider</a>)
+  def index = page(<a href={"http://localhost:%s/" format Client.port} >Connect with Provider</a>)
 
-  def apiCall(response: String) = page(
+  def userInfo(response: String) = page(
     <div><a href="/disconnect">Disconnect</a></div>
     <div>
-      <h2>Made OAuthenticated Api Call</h2>
+      <h2>User Info</h2>
       <pre>{response}</pre>
     </div>
   )
@@ -37,8 +37,10 @@ trait Templates {
       {  toks.map { t => t match {
           case AccessToken(value, idToken) =>
             <p>
-            Authorized <strong>{ value }</strong> (access) <a href={"/tokens/delete/%s" format value}>delete</a>
-            id_token {idToken}
+            access_token <strong>{ value }</strong>
+            </p>
+            <p>
+            id_token {idToken.getOrElse("None")}
             </p>
       } } }
     </div>

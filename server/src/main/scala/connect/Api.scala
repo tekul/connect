@@ -7,9 +7,8 @@ import net.liftweb.json.JsonDSL._
 
 class Api extends unfiltered.filter.Plan {
   def intent = {
-    case ContextPath(_, Seg("users" :: id)) => {
-
-      Json(("user" -> ("id" -> id) ~ ("name" -> "finnegan")))
+    case ContextPath(_, Seg("hello" :: id)) => {
+      ResponseString("Hello %s, I'm an API" format(id))
     }
   }
 }
