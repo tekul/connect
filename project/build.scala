@@ -21,8 +21,8 @@ object BuildSettings {
     transitiveClassifiers := Seq("sources"),
     organization := buildOrganization,
     version      := buildVersion,
-    getJarsTask,
-    publishTo := Some(localMaven)
+    getJarsTask
+//    publishTo := Some(localMaven)
   )
 }
 
