@@ -1,6 +1,7 @@
 package connect
 
 import unfiltered.oauth2.{Client, ResourceOwner, Token, TokenStore}
+import collection.mutable.HashMap
 
 case class AppToken(value: String, clientId: String, scopes: Seq[String],
                     redirectUri: String, owner: String, idToken: Option[String]=None)
@@ -34,10 +35,9 @@ trait OpenIDProvider {
 }
 
 trait Tokens extends TokenStore with Logger {
-  import scala.collection.JavaConversions._
   import java.util.UUID.randomUUID
-  private val accessTokens = new java.util.HashMap[String, AppToken]
-  private val codeTokens = new java.util.HashMap[String, CodeToken]
+  private val accessTokens = new HashMap[String, AppToken]
+  private val codeTokens = new HashMap[String, CodeToken]
 
   val openidProvider: OpenIDProvider
 
@@ -48,18 +48,12 @@ trait Tokens extends TokenStore with Logger {
   )
 
   /** may want to rename to this authorizationCode */
-  def token(code: String) = codeTokens.get(code) match {
-    case null => None
-    case t => Some(t)
-  }
+  def token(code: String) = codeTokens.get(code)
 
-  def accessToken(value: String) = accessTokens.get(value) match {
-    case null => None
-    case t => Some(t)
-  }
+  def accessToken(value: String) = accessTokens.get(value)
 
   def refreshToken(refreshToken: String) =
-    accessTokens.values().filter(_.refresh.get==refreshToken).headOption
+    accessTokens.values.filter(_.refresh.get == refreshToken).headOption
 
   def exchangeAuthorizationCode(other: Token) = {
     val ct = other.asInstanceOf[CodeToken]
