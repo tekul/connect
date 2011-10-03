@@ -3,10 +3,6 @@ import Keys._
 import com.github.siasia.WebPlugin._
 
 object BuildSettings {
-  val buildOrganization = "connect"
-  val buildVersion      = "0.1-SNAPSHOT"
-  val buildScalaVersion = "2.9.1"
-
   import Resolvers._
 
   val getJars = TaskKey[Unit]("get-jars")
@@ -16,11 +12,11 @@ object BuildSettings {
   }
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
-    scalaVersion := buildScalaVersion,
+    scalaVersion := "2.9.1",
+    organization := "connect",
+    version      := "0.1-SNAPSHOT",
     resolvers ++= Seq(mavenLocalRepo, scalaToolsSnapshots),
     transitiveClassifiers := Seq("sources"),
-    organization := buildOrganization,
-    version      := buildVersion,
     getJarsTask
 //    publishTo := Some(localMaven)
   )
@@ -30,7 +26,6 @@ object Resolvers {
 //  val localMaven = Resolver.file("my-test-repo", file("/Users/luke/test"))(Resolver.mavenStylePatterns)
   val mavenLocalRepo = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
   val scalaToolsSnapshots = "Scalatools Snaps" at "http://scala-tools.org/repo-snapshots/"
-//  val springSnapshotRepo = "Spring Snapshot Repo" at "http://maven.springframework.org/snapshot"
 }
 
 object Dependencies {
@@ -77,7 +72,6 @@ object ConnectBuild extends Build {
   import Dependencies._
   import BuildSettings._
 
-//  val springSecDeps = Seq(springSecurityCore, springSecurityWeb, springSecurityConfig, springSecurityOauth2)
   val testDeps = Seq(junit, scalaTest, mockito)
   val loggingDeps = Seq(slf4j, jcl, logback)
 

@@ -91,7 +91,7 @@ class OAuth2Filter extends Authorized with DefaultAuthorizationPaths with Defaul
  * https://github.com/softprops/unfiltered-oauth2-server.g8.git
  */
 object ConnectServer {
-  val resources = new java.net.URL(getClass.getResource("/src/main/webapp/robots.txt"), ".")
+  val resources = new java.net.URL(getClass.getResource("/web/robots.txt"), ".")
   val port = 8080
 
   val tokenAuthorization = new TokenAuthorization
