@@ -11,7 +11,7 @@ Currently this is not available from a repo, so you need to build and install it
    1. `git clone git://github.com/n8han/Unfiltered.git`
    2. `cd Unfiltered`
    3. `git checkout oauth2`
-   4. Edit project/build.scala and change the version to "0.5.0-OAUTH2" and scalaVersion to "2.9.1"
+   4. Edit project/build.scala and change scalaVersion to "2.9.1"
    5. Clear the Ivy cache: `rm -Rf ~/.ivy2/cache`
    6. `sbt`
    7. From the sbt shell run `compile` and then `publish-local` [1]

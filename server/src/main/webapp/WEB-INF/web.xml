@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  -
+  -->
+
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+    <filter>
+        <filter-name>oauth2</filter-name>
+        <filter-class>connect.OAuth2Filter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>authentication</filter-name>
+        <filter-class>connect.AuthenticationPlan</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>authorization</filter-name>
+        <filter-class>connect.TokenAuthorization</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>userInfo</filter-name>
+        <filter-class>connect.UserInfoFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+      <filter-name>oauth2</filter-name>
+      <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+    <filter-mapping>
+      <filter-name>authentication</filter-name>
+      <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+      <filter-name>authorization</filter-name>
+      <url-pattern>/userinfo</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+      <filter-name>userInfo</filter-name>
+      <url-pattern>/userinfo</url-pattern>
+    </filter-mapping>
+
+</web-app>

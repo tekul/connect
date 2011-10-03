@@ -18,7 +18,7 @@ trait Templates {
     </html>
   )
 
-  def index = page(<a href={"http://localhost:%s/" format Client.port} >Connect with Provider</a>)
+//  def index = page(<a href={"http://localhost:%s/" format Client.port} >Connect with Provider</a>)
 
   def userInfo(response: String) = page(
     <div><a href="/disconnect">Disconnect</a></div>

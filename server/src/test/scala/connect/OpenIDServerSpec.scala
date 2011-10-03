@@ -5,17 +5,15 @@ import dispatch.{ConfiguredHttpClient, Http, Handler}
 import org.apache.http.client.RedirectStrategy
 import org.apache.http.impl.client.BasicCookieStore
 import org.specs.Specification
-import unfiltered.request.Path
-import unfiltered.response.ResponseString._
 import jwt.Jwt
 
 class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
 
   def setup = ConnectServer.configureServer(_)
 
-  val authorize = host / "oauth" / "authorize"
-  val token = host / "oauth" / "token"
-  val userInfo = host / "openid" / "userinfo"
+  val authorize = host / "authorize"
+  val token = host / "token"
+  val userInfo = host / "userinfo"
   val cookies = new BasicCookieStore
 
   override def http[T](handler: Handler[T]): T = {

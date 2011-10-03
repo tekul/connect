@@ -1,7 +1,7 @@
 package connect
 
 
-trait Templates {
+object Templates {
   import unfiltered.response._
   import unfiltered.oauth2.{RequestBundle}
 
@@ -9,12 +9,12 @@ trait Templates {
     <html>
       <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        <title>oauth provider</title>
+        <title>OpenID Connect Provider</title>
         <link href="/css/app.css" type="text/css" rel="stylesheet" />
       </head>
       <body>
         <div id="container">
-          <h1><a href="/">oauth provider</a></h1>
+          <h1><a href="/">OpenID Connect Provider</a></h1>
           {body}
         </div>
       </body>
@@ -31,16 +31,9 @@ trait Templates {
           case _ => <p><a href="/login">log in</a>.</p>
         }
       }
-<!--
-      <p>These are your endpoints</p>
-      <ul id="oauth-endpoints">
-        <li>{urlBase}oauth/authorize</li>
-        <li>{urlBase}oauth/token</li>
-      </ul>
- -->
-      <a href="http://localhost:8080/oauth/authorize?client_id=exampleclient&amp;redirect_uri=http://localhost:8081/&amp;response_type=code%20id_token&amp;scope=openid">OpenID Authorization Code request</a>
+
+      <a href="/authorize?client_id=exampleclient&amp;redirect_uri=http://localhost:8081/&amp;response_type=code%20id_token&amp;scope=openid">OpenID Authorization Code request</a>
       <br />
-      <a href="http://localhost:8081/">Client app &rarr;</a>
     </div>
   )
 
@@ -71,7 +64,7 @@ trait Templates {
 
   def authorizationForm[T](bundle: RequestBundle[T], approve: String, deny: String) = page(
     <div>
-    <form action="/oauth/authorize" method="POST">
+    <form action="/authorize" method="POST">
         <p>
           A 3rd party application named <strong>{bundle.client.id}</strong> has requested access to your data.
         </p>

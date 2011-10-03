@@ -6,11 +6,11 @@ import unfiltered.Cookie
 
 import unfiltered.oauth2.{Client, ResourceOwner, RequestBundle}
 
-trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service with Templates {
-  import scala.collection.JavaConversions._
-  import unfiltered.request.{HttpRequest => Req}
+import Templates._
 
-  val sessions = new java.util.HashMap[String, User]
+
+trait OAuth2Service extends unfiltered.oauth2.Service {
+  import scala.collection.JavaConversions._
 
   val ApproveKey = "Approve"
   val DenyKey = "Deny"
@@ -22,20 +22,12 @@ trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service
   def invalidRedirectUri(uri: Option[String], client: Option[Client]) =
     ResponseString("missing or invalid redirect_uri")
 
-  def resourceOwner[T](r: Req[T]): Option[User] = r match {
-    case Cookies(cookies) => cookies("sid") match {
-      case Some(Cookie(_, value, _, _, _, _)) => sessions.get(value) match {
-        case null => None
-        case u => Some(u)
-      }
-      case _ =>  None
-    }
-  }
+  def resourceOwner[T](r: HttpRequest[T]): Option[User] = Authenticated.unapply(r)
 
   def resourceOwner(userName: String, password: String): Option[ResourceOwner] = throw new UnsupportedOperationException
 
   // TODO: More robust acceptance checking
-  def accepted[T](r: Req[T]) = r match {
+  def accepted[T](r: HttpRequest[T]) = r match {
     case POST(_) & Params(p) => p("submit") match {
       case Seq(ApproveKey) => true
       case _ => false
@@ -43,7 +35,7 @@ trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service
     case _ => false
   }
 
-  def denied[T](r: Req[T]) = r match {
+  def denied[T](r: HttpRequest[T]) = r match {
     case POST(_) & Params(p) => p("submit") match {
       case Seq(DenyKey) => true
       case _ => false
@@ -59,26 +51,50 @@ trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service
   /**
    * TODO: Support for checking client/resource owner scopes.
    */
-  def validScopes[T](resourceOwner: ResourceOwner, scopes: Seq[String], req: Req[T]): Boolean = true
+  def validScopes[T](resourceOwner: ResourceOwner, scopes: Seq[String], req: HttpRequest[T]): Boolean = true
 
   def invalidClient = ResponseString("invalid client")
+}
 
+object SessionStore {
+  val sessions = new scala.collection.mutable.HashMap[String, User]
+
+  def newSession(u: User): String = {
+    val sid = java.util.UUID.randomUUID.toString
+    sessions.put(sid, u)
+    sid
+  }
+
+  def get(id: String): Option[User] = sessions.get(id)
+
+  def remove(id: String) { sessions.remove(id) }
+}
+
+object Authenticated {
+  def unapply[T](r: HttpRequest[T]): Option[User] = r match {
+    case Cookies(cookies) => cookies("sid") match {
+      case Some(Cookie(_, value, _, _, _, _)) => SessionStore.get(value)
+      case _ =>  None
+    }
+  }
+}
+
+
+class AuthenticationPlan extends unfiltered.filter.Plan {
   def intent = {
-    case Path("/") & r => index("", resourceOwner(r))
+    case Path("/") & r => index("", Authenticated.unapply(r))
 
     case Path("/login") & Params(p) & r =>
-      resourceOwner(r) match {
-        case Some(u) =>
+      r match {
+        case Authenticated(user) =>
           Redirect("/")
         case _ =>
           (p("user"), p("password")) match {
             case (Seq(username), Seq(password)) =>
-              val u = User(username, None)
-              val sid = java.util.UUID.randomUUID.toString
-              sessions.put(sid, u)
+              val sid = SessionStore.newSession(User(username, None))
               ResponseCookies(Cookie("sid", sid)) ~> ((p("client_id"), p("redirect_uri"), p("response_type")) match {
                 case (Seq(clientId), Seq(returnUri), Seq(responseType)) =>
-                  Redirect("/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=%s" format(
+                  Redirect("/authorize?client_id=%s&redirect_uri=%s&response_type=%s" format(
                     clientId, returnUri, responseType
                   ))
                 case q => Redirect("/")
@@ -89,7 +105,7 @@ trait AppContainer extends unfiltered.filter.Plan with unfiltered.oauth2.Service
 
     case Path("/logout") & r =>
       r.cookies.find(_.name == "sid") match {
-        case Some(sidCookie) => sessions.remove(sidCookie)
+        case Some(sidCookie) => SessionStore.remove(sidCookie.value)
         case None =>
       }
       ResponseCookies(Cookie("sid","")) ~> Redirect("/")

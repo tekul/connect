@@ -36,7 +36,7 @@ class App extends Templates with unfiltered.filter.Plan {
     // if not, render the current list of tokens
     case GET(Path("/") & AuthorizedToken(at)) =>
       try {
-        Http(svc / "openid" / "userinfo" <:< Map("Authorization" -> ("Bearer " + at.value)) ># { js =>
+        Http(svc  / "userinfo" <:< Map("Authorization" -> ("Bearer " + at.value)) ># { js =>
           val response = pretty(render(js))
           userInfo(response)
         })
@@ -60,7 +60,7 @@ class App extends Templates with unfiltered.filter.Plan {
         val postParams = Map(GrantType -> AuthorizationCode, Code -> code.get, ClientSecret -> "secret",
                              ClientId -> client_id, RedirectURI -> redirect_uri)
         // Make an access token request and create a token from the returned JSON
-        val accessToken = Http(svc / "oauth" / "token" << postParams ># { AccessToken(_) })
+        val accessToken = Http(svc / "token" << postParams ># { AccessToken(_) })
         println("Retrieved access token response: " + accessToken)
         val sid = java.util.UUID.randomUUID.toString
         tmap += (sid -> accessToken)

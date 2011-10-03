@@ -12,9 +12,9 @@ object AccessToken {
     (p.get("access_token"), p.get("token_type")) match {
       case (Some(access_token), Some(token_type)) =>
         token_type match {
-          case "bearer" =>
+          case "Bearer" =>
             new AccessToken(access_token, p.get("id_token"))
-          case _ => sys.error("Only bearer tokens are currently supported")
+          case _ => sys.error("Token type %s not recognised. Only bearer tokens are currently supported" format(token_type))
         }
       case _ => sys.error("access_token or token_type missing from token response")
     }

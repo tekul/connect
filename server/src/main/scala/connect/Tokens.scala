@@ -7,8 +7,7 @@ case class AppToken(value: String, clientId: String, scopes: Seq[String],
      extends Token {
        def refresh = Some("refreshToken")
        def expiresIn = Some(3600)
-  // We only support bearer tokens for access tokens. TODO: Authorization tokens should not support this
-       def tokenType = "bearer"
+       def tokenType = "Bearer"
        override val extras = idToken match {
          case Some(idt) => Map("id_token" -> idt)
          case None => Map.empty[String, String]
@@ -31,7 +30,7 @@ trait OpenIDProvider {
   /**
    * Creates a JWT ID token for the supplied user (resource owner)
    */
-  def generateIdToken(token: Token): String
+  def generateIdToken(owner: String, clientId: String, scopes: Seq[String]): String
 }
 
 trait Tokens extends TokenStore with Logger {
@@ -67,7 +66,8 @@ trait Tokens extends TokenStore with Logger {
 
     logger.debug("Exchanging authorization code token: " + ct)
 
-    val idToken = if (ct.responseTypes.contains("id_token")) Some(openidProvider.generateIdToken(ct)) else None
+    val idToken = if (ct.responseTypes.contains("id_token"))
+      Some(openidProvider.generateIdToken(ct.owner, ct.clientId, ct.scopes)) else None
 
     logger.debug("id_token is " + idToken)
 
@@ -83,16 +83,21 @@ trait Tokens extends TokenStore with Logger {
     ct.value
   }
 
-  /** these tokens are not associated with a resource owner */
-  def generateClientToken(client: Client, scopes: Seq[String]) = {
-    val at = AppToken(randomUUID.toString, client.id, scopes, client.redirectUri, client.id)
+  def generateImplicitAccessToken(responseTypes: Seq[String], owner: ResourceOwner, client: Client,
+                                  scopes: Seq[String], redirectURI: String) = {
+    val idToken = if (responseTypes.contains("id_token"))
+      Some(openidProvider.generateIdToken(owner.id, client.id, scopes)) else None
+
+    logger.debug("id_token is " + idToken)
+
+    val at = AppToken(randomUUID.toString, client.id, scopes, redirectURI, owner.id)
     accessTokens.put(at.value, at)
     at
   }
 
-  def generateImplicitAccessToken(responseTypes: Seq[String], owner: ResourceOwner, client: Client,
-                                  scopes: Seq[String], redirectURI: String) = {
-    val at = AppToken(randomUUID.toString, client.id, scopes, redirectURI, owner.id)
+  /** these tokens are not associated with a resource owner */
+  def generateClientToken(client: Client, scopes: Seq[String]) = {
+    val at = AppToken(randomUUID.toString, client.id, scopes, client.redirectUri, client.id)
     accessTokens.put(at.value, at)
     at
   }
