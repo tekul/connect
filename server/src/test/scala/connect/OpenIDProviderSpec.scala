@@ -2,6 +2,8 @@ package connect
 
 import org.specs.Specification
 
+import net.liftweb.json.JsonAST._
+
 /**
  *
  */
@@ -12,7 +14,10 @@ class OpenIDProviderSpec extends Specification {
     "validate its own tokens" in {
       val token = provider.generateIdToken("owner", "client", Seq("openid"))
 
-      provider.checkIdToken(token)
+      val claims = provider.checkIdToken(token)
+
+      println (claims)
+      claims \ "error" must_== JNothing
     }
   }
 

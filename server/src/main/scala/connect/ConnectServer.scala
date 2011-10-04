@@ -79,14 +79,14 @@ object OpenID extends OpenIDProvider with Logger {
       jwt.verifySignature(verifier)
       val claims = parse(jwt.claims)
       val ttl = (claims \ "exp") match {
-        case JInt(expiry) => System.currentTimeMillis() - expiry
+        case JInt(expiry) => expiry - (System.currentTimeMillis()/1000)
       }
 
       if (ttl <= 0) {
-        logger.debug("Token expired, ttl =  " + ttl)
+        logger.debug("Token expired, ttl = " + ttl)
         invalidToken
       } else {
-        logger.debug("Token expires in %s ms" format ttl)
+        logger.debug("Token expires in %ss" format ttl)
         claims
       }
     } catch {
