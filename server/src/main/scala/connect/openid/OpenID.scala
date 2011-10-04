@@ -1,9 +1,12 @@
 package connect.openid
 
-import unfiltered.filter.request.ContextPath
+import unfiltered.request._
+import unfiltered.response.Json._
 import unfiltered.oauth2.OAuthResourceOwner
 import unfiltered.response._
+import unfiltered.filter.request.ContextPath
 import connect.Logger
+import net.liftweb.json.JsonAST.JValue
 
 object OpenID {
   /**
@@ -14,8 +17,27 @@ object OpenID {
 
 }
 
+import OpenID._
+
+trait OpenIDProvider {
+  /**
+   * Creates a JWT ID token for the supplied user (resource owner)
+   */
+  def generateIdToken(owner: String, clientId: String, scopes: Seq[String]): String
+
+  /**
+   * Validates and decodes an `id_token` submitted to the `check_id` endpoint.
+   */
+  def checkIdToken(id_token: String): JValue
+}
+
+
 trait UserInfoEndPoint {
   val UserInfoPath: String
+}
+
+trait CheckIdEndPoint {
+  val CheckIdPath: String
 }
 
 /**
@@ -32,15 +54,20 @@ trait DefaultUserInfoEndPoint extends UserInfoEndPoint {
   val UserInfoPath = "/userinfo"
 }
 
+trait DefaultCheckIdEndPoint extends CheckIdEndPoint {
+  val CheckIdPath = "/check_id"
+}
+
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
+
 /**
- * Handles request to the OpenID connect endpoints.
+ * Handles request to the user info connect endpoint.
  */
 trait UserInfoPlan extends unfiltered.filter.Plan with UserInfoEndPoint with Logger {
+  implicit val formats = Serialization.formats(NoTypeHints)
   val userInfoService: UserInfoService
 
-  import net.liftweb.json._
-  import net.liftweb.json.JsonDSL._
-  implicit val formats = Serialization.formats(NoTypeHints)
 
   def intent = {
     case req @ ContextPath(_, UserInfoPath) => req match {
@@ -57,5 +84,18 @@ trait UserInfoPlan extends unfiltered.filter.Plan with UserInfoEndPoint with Log
       case _ => Json(("error" -> "invalid request"))
     }
 
+  }
+}
+
+trait CheckIdPlan extends unfiltered.filter.Plan with CheckIdEndPoint with Logger {
+  implicit val formats = Serialization.formats(NoTypeHints)
+  val openIdProvider: OpenIDProvider
+
+  def intent = {
+    case ContextPath(_, CheckIdPath) & Params(params) =>
+      params(IdToken) match {
+        case Seq(id_token) => Json(openIdProvider.checkIdToken(id_token))
+        case Nil => Json(("error" -> "missing id_token"))
+      }
   }
 }

@@ -1,5 +1,6 @@
 package connect
 
+import openid.OpenIDProvider
 import unfiltered.oauth2.{Client, ResourceOwner, Token, TokenStore}
 import collection.mutable.HashMap
 
@@ -25,13 +26,6 @@ case class CodeToken(responseTypes: Seq[String], value: String, clientId: String
   def refresh = throw new UnsupportedOperationException
   def expiresIn = throw new UnsupportedOperationException
   def idToken = throw new UnsupportedOperationException
-}
-
-trait OpenIDProvider {
-  /**
-   * Creates a JWT ID token for the supplied user (resource owner)
-   */
-  def generateIdToken(owner: String, clientId: String, scopes: Seq[String]): String
 }
 
 trait Tokens extends TokenStore with Logger {

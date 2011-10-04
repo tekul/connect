@@ -1,6 +1,5 @@
 import sbt._
 import Keys._
-import com.github.siasia.WebPlugin._
 
 object BuildSettings {
   import Resolvers._

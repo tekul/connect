@@ -10,8 +10,6 @@ import Templates._
 
 
 trait OAuth2Service extends unfiltered.oauth2.Service {
-  import scala.collection.JavaConversions._
-
   val ApproveKey = "Approve"
   val DenyKey = "Deny"
 
@@ -56,6 +54,10 @@ trait OAuth2Service extends unfiltered.oauth2.Service {
   def invalidClient = ResponseString("invalid client")
 }
 
+/**
+ * Represents the SSO session.
+ * TBD: Expiry, clearing out.
+ */
 object SessionStore {
   val sessions = new scala.collection.mutable.HashMap[String, User]
 
@@ -70,6 +72,9 @@ object SessionStore {
   def remove(id: String) { sessions.remove(id) }
 }
 
+/**
+ * Extractor which returns the currently authenticated user.
+ */
 object Authenticated {
   def unapply[T](r: HttpRequest[T]): Option[User] = r match {
     case Cookies(cookies) => cookies("sid") match {
@@ -78,7 +83,6 @@ object Authenticated {
     }
   }
 }
-
 
 class AuthenticationPlan extends unfiltered.filter.Plan {
   def intent = {
@@ -89,6 +93,8 @@ class AuthenticationPlan extends unfiltered.filter.Plan {
         case Authenticated(user) =>
           Redirect("/")
         case _ =>
+          // TODO: Select the appropriate authentication provider
+          // based on ?
           (p("user"), p("password")) match {
             case (Seq(username), Seq(password)) =>
               val sid = SessionStore.newSession(User(username, None))
