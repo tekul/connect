@@ -54,7 +54,7 @@ trait Tokens extends TokenStore with Logger {
 
     logger.debug("Exchanging authorization code token: " + ct)
 
-    val idToken = if (ct.responseTypes.contains("id_token"))
+    val idToken = if (ct.scopes.contains("openid"))
       Some(openidProvider.generateIdToken(ct.owner, ct.clientId, ct.scopes)) else None
 
     logger.debug("id_token is " + idToken)
@@ -67,6 +67,7 @@ trait Tokens extends TokenStore with Logger {
   def generateAuthorizationCode(responseTypes: Seq[String], owner: ResourceOwner, client: Client,
                         scopes: Seq[String], redirectURI: String) = {
     val ct = CodeToken(responseTypes, randomUUID.toString, client.id, scopes, redirectURI, owner.id)
+    logger.debug("Storing authorization code request " + ct)
     codeTokens.put(ct.value, ct)
     ct.value
   }

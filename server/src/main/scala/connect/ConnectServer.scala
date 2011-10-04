@@ -131,12 +131,10 @@ object ConnectServer {
     server.resources(ConnectServer.resources)
       .filter(new OAuth2Filter)
       .filter(new AuthenticationPlan) // Login etc
-      .filter(tokenAuthorization)
-      .filter(new UserInfoFilter)
-//      .context("/api") {
-//        _.filter(tokenAuthorization)
-//         .filter(new Api)
-//      }
+      .context("/connect") {
+        _.filter(tokenAuthorization)
+        .filter(new UserInfoFilter)
+      }
     server
   }
 

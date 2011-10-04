@@ -16,7 +16,6 @@ class OpenIDProviderSpec extends Specification {
 
       val claims = provider.checkIdToken(token)
 
-      println (claims)
       claims \ "error" must_== JNothing
     }
   }

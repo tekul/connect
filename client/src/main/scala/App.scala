@@ -12,7 +12,7 @@ import unfiltered.oauth2.OAuthorization._
 /**
  */
 class App extends Templates with unfiltered.filter.Plan {
-  val authorizationEndPoint = "http://localhost:8080/oauth/authorize"
+  val authorizationEndPoint = "http://localhost:8080/authorize"
   val client_id = "exampleclient"
   val redirect_uri = "http://localhost:8081/callback"
 
@@ -36,7 +36,7 @@ class App extends Templates with unfiltered.filter.Plan {
     // if not, render the current list of tokens
     case GET(Path("/") & AuthorizedToken(at)) =>
       try {
-        Http(svc  / "userinfo" <:< Map("Authorization" -> ("Bearer " + at.value)) ># { js =>
+        Http(svc  / "connect" / "userinfo" <:< Map("Authorization" -> ("Bearer " + at.value)) ># { js =>
           val response = pretty(render(js))
           userInfo(response)
         })

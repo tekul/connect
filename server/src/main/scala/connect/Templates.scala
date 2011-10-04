@@ -32,7 +32,7 @@ object Templates {
         }
       }
 
-      <a href="/authorize?client_id=exampleclient&amp;redirect_uri=http://localhost:8081/&amp;response_type=code%20id_token&amp;scope=openid">OpenID Authorization Code request</a>
+      <a href="/authorize?client_id=exampleclient&amp;redirect_uri=http://localhost:8081/&amp;response_type=code&amp;scope=openid">OpenID Authorization Code request</a>
       <br />
     </div>
   )
@@ -52,6 +52,7 @@ object Templates {
      <form action="/login" method="POST">
       <p>Sign in. A 3rd party application would like access to your data</p>
       <input type="hidden" name="response_type" value={bundle.responseTypes.mkString(" ")} />
+      <input type="hidden" name="scope" value={bundle.scope.mkString(" ")} />
       <input type="hidden" name="client_id" value={bundle.client.id} />
       <input type="hidden" name="redirect_uri" value={bundle.redirectUri} />
 
@@ -72,6 +73,7 @@ object Templates {
         <input type="hidden" name="response_type" value={bundle.responseTypes.mkString(" ")} />
         <input type="hidden" name="client_id" value={bundle.client.id} />
         <input type="hidden" name="redirect_uri" value={bundle.redirectUri} />
+        <input type="hidden" name="scope" value={bundle.scope.mkString(" ")} />
 
         <div id="oauth-opts">
           <input type="submit" name="submit" value={approve} />

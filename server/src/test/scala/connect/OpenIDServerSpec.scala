@@ -9,7 +9,11 @@ import jwt.Jwt
 
 class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
 
-  def setup = ConnectServer.configureServer(_)
+  def setup = _.filter(new OAuth2Filter)
+                .filter(new AuthenticationPlan)
+                .filter(new TokenAuthorization)
+                .filter(new UserInfoFilter)
+
 
   val authorize = host / "authorize"
   val token = host / "token"
@@ -34,7 +38,7 @@ class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
     finally { h.shutdown() }
   }
 
-  "OAuth2 requests for response_type 'code id_token'" should {
+  "OAuth2 requests for response_type 'code'" should {
     "follow the authorization code flow" in {
 
       val client = AppClient("exampleclient", "secret", "http://localhost:8081/")
@@ -43,10 +47,11 @@ class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
       http(host / "login" << Map("user"->"john", "password"->"password") >|)
 
       val authzCodeParams = Map(
-        "response_type" -> "code id_token",
+        "response_type" -> "code",
         "client_id" -> client.id,
         "redirect_uri" -> client.redirectUri,
-        "state" -> "test_state"
+        "state" -> "test_state",
+        "scope" -> "openid"
       )
 
       // Send the authorization request
