@@ -7,6 +7,28 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
+    <context-param>
+        <description>Startup configuration class that will be instantiated by ComponentRegistryListener</description>
+        <param-name>component-registry-class</param-name>
+        <param-value>connect.ConnectComponentRegistry</param-value>
+    </context-param>
+<!--
+    <context-param>
+        <description>Startup configuration file that will be run by the ComponentRegistryListener</description>
+        <param-name>component-registry-script</param-name>
+        <param-value>/WEB-INF/boot.scala</param-value>
+    </context-param>
+-->
+    <filter>
+        <filter-name>repl</filter-name>
+        <filter-class>connect.ReplFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>oauth2</filter-name>
+        <filter-class>connect.OAuth2Filter</filter-class>
+    </filter>
+
     <filter>
         <filter-name>oauth2</filter-name>
         <filter-class>connect.OAuth2Filter</filter-class>
@@ -14,12 +36,12 @@
 
     <filter>
         <filter-name>authentication</filter-name>
-        <filter-class>connect.AuthenticationPlan</filter-class>
+        <filter-class>connect.AuthenticationFilter</filter-class>
     </filter>
 
     <filter>
         <filter-name>authorization</filter-name>
-        <filter-class>connect.TokenAuthorization</filter-class>
+        <filter-class>connect.TokenAuthorizationFilter</filter-class>
     </filter>
 
     <filter>
@@ -28,10 +50,14 @@
     </filter>
 
     <filter-mapping>
+      <filter-name>repl</filter-name>
+      <url-pattern>/repl</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
       <filter-name>oauth2</filter-name>
       <url-pattern>/*</url-pattern>
     </filter-mapping>
-
 
     <filter-mapping>
       <filter-name>authentication</filter-name>
@@ -47,5 +73,9 @@
       <filter-name>userInfo</filter-name>
       <url-pattern>/userinfo</url-pattern>
     </filter-mapping>
+
+    <listener>
+        <listener-class>connect.boot.ComponentRegistryListener</listener-class>
+    </listener>
 
 </web-app>
