@@ -4,6 +4,7 @@ import openid.OpenIDProvider
 import unfiltered.jetty.Server
 import unfiltered.request._
 import unfiltered.oauth2._
+import connect.util.ReplPlan
 import unfiltered.filter.Plan
 import unfiltered.response.Pass
 
@@ -34,6 +35,9 @@ object ConnectServer {
     unfiltered.jetty.Http(port)
       .resources(ConnectServer.resources)
       .filter(new RequestDumper)
+      .context("/repl") {
+        _.filter(new ReplPlan(config))
+      }
       .filter(oauth2Plan)
       .filter(authenticationPlan) // Login etc
       .context("/connect") {

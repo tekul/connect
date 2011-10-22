@@ -26,7 +26,6 @@ object Templates {
         currentUser match {
           case Some(user) => <div>
             <p>welcome {user.id}. <a href="/logout">log out</a></p>
-            <p>view your <a href="/connections">connections</a></p>
           </div>
           case _ => <p><a href="/login">log in</a>.</p>
         }
@@ -56,8 +55,8 @@ object Templates {
       <input type="hidden" name="client_id" value={bundle.client.id} />
       <input type="hidden" name="redirect_uri" value={bundle.redirectUri} />
 
-      <input type="text" name="user" value="user" />
-      <input type="password" name="password" value="password" />
+      <input type="text" name="user" value="" />
+      <input type="password" name="password" value="" />
       <input type="submit" value="login"/>
      </form>
     </div>
@@ -67,7 +66,8 @@ object Templates {
     <div>
     <form action="/authorize" method="POST">
         <p>
-          A 3rd party application named <strong>{bundle.client.id}</strong> has requested access to your data.
+          A 3rd party application named <strong>{bundle.client.id}</strong> has requested access to your data with
+          scope <em>{bundle.scope.mkString(",")}</em>.
         </p>
 
         <input type="hidden" name="response_type" value={bundle.responseTypes.mkString(" ")} />

@@ -2,6 +2,8 @@
 .gradle/
 .classpath
 .project
+.settings/
+.cache
 .scala_dependencies
 build/
 out/
