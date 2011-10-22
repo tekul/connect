@@ -55,19 +55,32 @@ trait OAuth2Service extends unfiltered.oauth2.Service {
 }
 
 /**
- * Represents the SSO session.
- * TBD: Expiry, clearing out.
+ * Very simple session store to represent the SSO session.
  */
 object SessionStore {
-  val sessions = new scala.collection.mutable.HashMap[String, User]
+  val sessions = new java.util.concurrent.ConcurrentHashMap[String, Session]
+
+  case class Session(user: User, expiry: Long) {
+    def this(user: User) = this(user, System.currentTimeMillis() + 3600*1000)
+  }
 
   def newSession(u: User): String = {
     val sid = java.util.UUID.randomUUID.toString
-    sessions.put(sid, u)
+    sessions.put(sid, new Session(u))
     sid
   }
 
-  def get(id: String): Option[User] = sessions.get(id)
+  def get(id: String): Option[User] = {
+    sessions.get(id) match {
+      case Session(user, expiry) =>
+        if (System.currentTimeMillis() - expiry > 0) {
+          remove(id)
+          None
+        } else
+          Some(user)
+      case _ => None
+    }
+  }
 
   def remove(id: String) { sessions.remove(id) }
 }
@@ -84,7 +97,7 @@ object Authenticated {
   }
 }
 
-class AuthenticationPlan extends unfiltered.filter.Plan {
+class AuthenticationPlan extends unfiltered.filter.Plan with Logger {
   def intent = {
     case Path("/") & r => index("", Authenticated.unapply(r))
 
@@ -97,6 +110,7 @@ class AuthenticationPlan extends unfiltered.filter.Plan {
           // based on ?
           (p("user"), p("password")) match {
             case (Seq(username), Seq(password)) =>
+              logger.debug("Logging in user " + username)
               val sid = SessionStore.newSession(User(username, None))
               ResponseCookies(Cookie("sid", sid)) ~> ((p("client_id"), p("redirect_uri"), p("response_type")) match {
                 case (Seq(clientId), Seq(returnUri), Seq(responseType)) =>

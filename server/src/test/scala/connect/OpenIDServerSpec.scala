@@ -9,10 +9,12 @@ import jwt.Jwt
 
 class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
 
-  def setup = _.filter(new OAuth2Filter)
-                .filter(new AuthenticationPlan)
-                .filter(new TokenAuthorization)
-                .filter(new UserInfoFilter)
+  object Config extends ConnectComponentRegistry
+
+  def setup = _.filter(Config.oauth2Plan)
+                .filter(Config.authenticationPlan)
+                .filter(Config.tokenAuthorizationPlan)
+                .filter(Config.userInfoPlan)
 
 
   val authorize = host / "authorize"

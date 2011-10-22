@@ -4,6 +4,7 @@ import unfiltered.request._
 import unfiltered.response.Json._
 import unfiltered.oauth2.OAuthResourceOwner
 import unfiltered.response._
+import unfiltered.filter.Plan
 import unfiltered.filter.request.ContextPath
 import connect.Logger
 import net.liftweb.json.JsonAST.JValue
@@ -23,7 +24,7 @@ trait OpenIDProvider {
   /**
    * Creates a JWT ID token for the supplied user (resource owner)
    */
-  def generateIdToken(owner: String, clientId: String, scopes: Seq[String]): String
+  def generateIdToken(owner: String, clientId: String, scopes: Seq[String]): Option[String]
 
   /**
    * Validates and decodes an `id_token` submitted to the `check_id` endpoint.
@@ -38,15 +39,6 @@ trait UserInfoEndPoint {
 
 trait CheckIdEndPoint {
   val CheckIdPath: String
-}
-
-/**
- * Session management endpoints
- */
-trait SessionManagementEndPoints {
-  val CheckSessionPath: String
-  val RefreshSessionPath: String
-  val EndSessionPath: String
 }
 
 trait DefaultUserInfoEndPoint extends UserInfoEndPoint {
@@ -64,10 +56,8 @@ import net.liftweb.json.JsonDSL._
 /**
  * Handles request to the user info connect endpoint.
  */
-trait UserInfoPlan extends unfiltered.filter.Plan with UserInfoEndPoint with Logger {
+abstract class UserInfoPlan(userInfoService: UserInfoService) extends Plan with UserInfoEndPoint with Logger {
   implicit val formats = Serialization.formats(NoTypeHints)
-  val userInfoService: UserInfoService
-
 
   def intent = {
     case req @ ContextPath(_, UserInfoPath) => req match {
@@ -87,9 +77,8 @@ trait UserInfoPlan extends unfiltered.filter.Plan with UserInfoEndPoint with Log
   }
 }
 
-trait CheckIdPlan extends unfiltered.filter.Plan with CheckIdEndPoint with Logger {
+abstract class CheckIdPlan(openIdProvider: OpenIDProvider) extends Plan with CheckIdEndPoint with Logger {
   implicit val formats = Serialization.formats(NoTypeHints)
-  val openIdProvider: OpenIDProvider
 
   def intent = {
     case ContextPath(_, CheckIdPath) & Params(params) =>
