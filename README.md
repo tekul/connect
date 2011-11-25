@@ -6,10 +6,10 @@ Basic Setup
 
 1. Install the [Simple Build Tool, version 0.11](https://github.com/harrah/xsbt/wiki/Setup)
 
-2. The project builds and runs against the oauth2 branch of [Unfiltered](https://github.com/n8han/Unfiltered).
+2. The project builds and runs against the oauth2 branch of [Unfiltered](https://github.com/unfiltered/unfiltered).
 Currently this is not available from a repo, so you need to build and install it locally first.
-   1. `git clone git://github.com/n8han/Unfiltered.git`
-   2. `cd Unfiltered`
+   1. `git clone git://github.com/unfiltered/unfiltered.git`
+   2. `cd u nfiltered`
    3. `git checkout oauth2`
    4. Edit project/build.scala and change scalaVersion to "2.9.1"
    5. Clear the Ivy cache: `rm -Rf ~/.ivy2/cache`
@@ -29,5 +29,7 @@ These can be run from within `sbt`. Alternatively, from the command line:
 1. `sbt "project server" run`
 2. `sbt "project client" run`
 
+The test server authentication accepts any username and password, but the only valid user (defined in TestUsers) has the
+id "john", so the openid authentication should fail for other user names.
 
 [1]: Alternatively, you can run multiple sbt commands from the standard command line, e.g. `sbt ";compile ;publish-local"`
