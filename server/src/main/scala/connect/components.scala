@@ -48,9 +48,11 @@ trait TokenStoreComponent { this: OpenIDProviderComponent with TokenRepositoryCo
       tokenRepo.createCodeToken(responseTypes, owner, client, scopes, redirectURI)
 
     def generateImplicitAccessToken(responseTypes: Seq[String], owner: ResourceOwner, client: Client,
-                                    scopes: Seq[String], redirectURI: String) =
-      tokenRepo.createAccessToken(client.id, scopes, redirectURI, owner.id,
-          openIDProvider.generateIdToken(owner.id, client.id, scopes))
+                                    scopes: Seq[String], redirectURI: String) = {
+      val idToken = if (responseTypes.contains("id_token"))
+        openIDProvider.generateIdToken(owner.id, client.id, scopes) else None
+      tokenRepo.createAccessToken(client.id, scopes, redirectURI, owner.id, idToken)
+    }
 
     def generateClientToken(client: Client, scopes: Seq[String]) = {
       tokenRepo.createAccessToken(client.id, scopes, client.redirectUri, client.id, None)

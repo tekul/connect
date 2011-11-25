@@ -91,6 +91,7 @@ class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
       val (accessToken, idToken) = http(req ># { js =>
           val params = js.extract[Map[String, String]]
           params must haveKey("access_token")
+          // 5.1.2.1 - Response must contain id_token if scope contains "openid"
           params must haveKey("id_token")
           (params("access_token"), params("id_token"))
         })
