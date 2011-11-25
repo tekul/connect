@@ -1,12 +1,13 @@
 package connect.openid
 
+import connect.Logger
+
 import unfiltered.request._
 import unfiltered.response.Json._
-import unfiltered.oauth2.OAuthResourceOwner
 import unfiltered.response._
 import unfiltered.filter.Plan
 import unfiltered.filter.request.ContextPath
-import connect.Logger
+import unfiltered.oauth2.OAuthIdentity
 import net.liftweb.json.JsonAST.JValue
 
 object OpenID {
@@ -62,12 +63,11 @@ abstract class UserInfoPlan(userInfoService: UserInfoService) extends Plan with 
   def intent = {
     case req @ ContextPath(_, UserInfoPath) => req match {
       // Extract the access-token authorized user information
-      case OAuthResourceOwner(id, scopes) =>
-
-        userInfoService.userInfo(id, scopes) match {
+      case OAuthIdentity(userId, clientId, scopes)  =>
+        userInfoService.userInfo(userId, scopes) match {
           case Some(user) => JsonContent ~> ResponseString(Serialization.write(user))
           case None =>
-            logger.error("Resource owner " + id + " is not an OpenID user")
+            logger.error("Resource owner " + userId + " is not an OpenID user")
             InternalServerError
         }
 

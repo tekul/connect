@@ -76,18 +76,24 @@ trait OAuth2ServerComponent {
  * Provides token authentication for the authorization filter by validating submitted access tokens
  * against those in the token store.
  */
-trait TokenAuthenticationComponent { this: AccessTokenReaderComponent =>
+trait TokenAuthenticationComponent { this: AccessTokenReaderComponent with ClientStoreComponent =>
   def tokenAuthenticator: AuthSource
 
   class StdTokenAuthenticator extends AuthSource with Logger {
-    def authenticateToken[T](token: AccessToken, request: HttpRequest[T]): Either[String, (ResourceOwner, Seq[String])] = {
+    def authenticateToken[T](token: AccessToken, request: HttpRequest[T]): Either[String, (ResourceOwner, Client, Seq[String])] = {
       logger.debug("Authenticating token " +  token)
       token match {
         case BearerToken(value) =>
           accessTokenReader.accessToken(value) match {
             case Some(appToken) =>
               logger.debug("Found token from client %s authorized by %s" format(appToken.clientId, appToken.owner))
-              Right(new User(appToken.owner, None), appToken.scopes)
+              clientStore.client(appToken.clientId, None) match {
+                case Some(client) =>
+                  Right(new User(appToken.owner, None), client, appToken.scopes)
+                case _ =>
+                  logger.debug("No client found for client id %s" format("appToken.clientId"))
+                  Left("Bad token")
+              }
             case None =>
               logger.debug("No matching token found")
               Left("Bad token")
@@ -190,7 +196,7 @@ trait AuthenticationWebComponent {
  * Provides a resource protection layer for access-token validation
  */
 trait TokenAuthorizationWebComponent { this: TokenAuthenticationComponent =>
-  def tokenAuthorizationPlan: Plan
+  def tokenAuthorizationPlan: ProtectionLike
 
   final class StdTokenAuthorizationPlan extends Protection(tokenAuthenticator)
 }
@@ -236,22 +242,24 @@ class ConnectComponentRegistry extends OAuth2WebComponent with ComponentRegistry
   with TokenSignerComponent
   with TokenVerifierComponent
   with TokenAuthenticationComponent
+  with ClientStoreComponent
   with AccessTokenReaderComponent
   with TokenStoreComponent
   with TokenRepositoryComponent {
 
   override val oauth2Plan = new StdOAuth2Plan
-  override val userInfoPlan = new StdUserInfoPlan
-  override val tokenAuthorizationPlan = new StdTokenAuthorizationPlan
+  override lazy val userInfoPlan = new StdUserInfoPlan
+  override lazy val tokenAuthorizationPlan = new StdTokenAuthorizationPlan
   override val authenticationPlan = new AuthenticationPlan
-  override val openIDProvider = new StdOpenIDProvider
+  override lazy val openIDProvider = new StdOpenIDProvider
   override val tokenSigner = RsaSigner(ServerKey.n, ServerKey.e)
   override val tokenVerifier = RsaVerifier(ServerKey.n, 65537)
   lazy val authorizationServer = new AuthorizationServer with Clients with TokenStoreDelegator with OAuth2Service {
     val openidProvider = openIDProvider
   }
-  override val tokenAuthenticator = new StdTokenAuthenticator
-  override val userInfoService = TestUsers
+  override lazy val clientStore = authorizationServer
+  override lazy val tokenAuthenticator = new StdTokenAuthenticator
+  override lazy val userInfoService = TestUsers
   override val tokenRepo = new InMemoryTokenRepository
   override val accessTokenReader = new AccessTokenReader() {
     def accessToken(value: String) = tokenRepo.accessToken(value)
