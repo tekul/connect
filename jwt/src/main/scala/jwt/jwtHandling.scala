@@ -54,7 +54,7 @@ object Jwt {
    * Create a signed token.
    *
    * @param content the body to be signed (the 'claims' segment)
-   * @param alg the alg header parameter (must be a signature algorithm, or 'none')
+   * @param signer used to sign the data, giving the "crypto" segment of the JWT.
    */
   def apply(content: CharSequence, signer: Signer) = {
     val header = JwtHeader(signer)
@@ -97,7 +97,7 @@ private[jwt] case class HeaderParameters(alg: String, enc: Option[String] = None
  * Header part of JWT
  *
  * @param bytes the decoded header
- * @param the parameter values contained in the header
+ * @param parameters the parameter values contained in the header
  */
 private[jwt] case class JwtHeader(bytes: Array[Byte], parameters: HeaderParameters) extends BinaryFormat {
   def this(parameters: HeaderParameters) = this(JwtHeader.serializeParams(parameters), parameters)

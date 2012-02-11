@@ -30,8 +30,6 @@ object Resolvers {
 }
 
 object Dependencies {
-  val springSecurityVersion = "3.1.0.CI-SNAPSHOT"
-  val springSecurityOAuthVersion = "1.0.0.BUILD-SNAPSHOT"
   val logbackVersion = "0.9.28"
   val slf4jVersion   = "1.6.1"
 
@@ -39,7 +37,7 @@ object Dependencies {
   val mockito    = "org.mockito" % "mockito-all" % "1.8.5" % "test"
   val junit      = "junit" % "junit" % "4.8.2" % "test"
 
-  val jetty7     = "org.eclipse.jetty" % "jetty-webapp" % "7.5.0.v20110901" % "jetty"
+  val jetty7     = "org.eclipse.jetty" % "jetty-webapp" % "7.5.0.v20110901" % "container"
 
   val slf4j      = "org.slf4j" % "slf4j-api" % slf4jVersion
   val logback    = "ch.qos.logback" % "logback-classic" % logbackVersion % "runtime"
@@ -47,7 +45,7 @@ object Dependencies {
 
   val lift_json  = "net.liftweb" %% "lift-json" % "2.4-M4"
 
-  val ufversion = "0.5.1-SNAPSHOT"
+  val ufversion = "0.5.4-SNAPSHOT"
 
   val ufDeps = Seq(
     "net.databinder" %% "unfiltered-filter" % ufversion,
@@ -91,8 +89,8 @@ object ConnectBuild extends Build {
   lazy val server = Project("server",
     file("server"),
     settings = buildSettings ++ com.github.siasia.WebPlugin.webSettings ++ Seq(
-      libraryDependencies ++= testDeps ++ loggingDeps ++ ufDeps ++ Seq(lift_json) ++ integrationTestDeps ++ Seq(jetty7),
-      excludeFilter in prepareWebapp := ("jetty*" | "commons-*" | "dispatch*" | "httpclient*" | "servlet-api*" | "httpcore*")
+      libraryDependencies ++= testDeps ++ loggingDeps ++ ufDeps ++ Seq(lift_json) ++ integrationTestDeps ++ Seq(jetty7)
+//      excludeFilter in prepareWebapp := ("jetty*" | "commons-*" | "dispatch*" | "httpclient*" | "servlet-api*" | "httpcore*")
     )
   ) dependsOn(jwt)
 

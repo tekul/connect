@@ -9,13 +9,12 @@ Basic Setup
 2. The project builds and runs against the oauth2 branch of [Unfiltered](https://github.com/unfiltered/unfiltered).
 Currently this is not available from a repo, so you need to build and install it locally first.
    1. `git clone git://github.com/unfiltered/unfiltered.git`
-   2. `cd u nfiltered`
+   2. `cd unfiltered`
    3. `git checkout oauth2`
    4. Edit project/build.scala and change scalaVersion to "2.9.1"
    5. Clear the Ivy cache: `rm -Rf ~/.ivy2/cache`
    6. `sbt` (to start the sbt command shell)
-   7. `set publishArtifact in (util, packageDoc) := false` (because of bug/issue with scaladoc)
-   8. `compile` and then `publish-local` [1]
+   7. `compile` and then `publish-local` [1]
 
 3. `cd connect`
 4. `sbt`

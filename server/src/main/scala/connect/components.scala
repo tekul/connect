@@ -82,7 +82,7 @@ trait TokenAuthenticationComponent { this: AccessTokenReaderComponent with Clien
   def tokenAuthenticator: AuthSource
 
   class StdTokenAuthenticator extends AuthSource with Logger {
-    def authenticateToken[T](token: AccessToken, request: HttpRequest[T]): Either[String, (ResourceOwner, Client, Seq[String])] = {
+    def authenticateToken[T](token: AccessToken, request: HttpRequest[T]): Either[String, (ResourceOwner, String, Seq[String])] = {
       logger.debug("Authenticating token " +  token)
       token match {
         case BearerToken(value) =>
@@ -91,7 +91,7 @@ trait TokenAuthenticationComponent { this: AccessTokenReaderComponent with Clien
               logger.debug("Found token from client %s authorized by %s" format(appToken.clientId, appToken.owner))
               clientStore.client(appToken.clientId, None) match {
                 case Some(client) =>
-                  Right(new User(appToken.owner, None), client, appToken.scopes)
+                  Right(new User(appToken.owner, None), client.id, appToken.scopes)
                 case _ =>
                   logger.debug("No client found for client id %s" format("appToken.clientId"))
                   Left("Bad token")

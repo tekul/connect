@@ -6,7 +6,7 @@ import connect.Logger
 case class AppToken(value: String, clientId: String, scopes: Seq[String],
                   redirectUri: String, owner: String, refresh: Option[String], idToken: Option[String]) extends Token {
   def expiresIn = Some(3600)
-  def tokenType = "Bearer"
+  def tokenType = Some("Bearer")
   override val extras = idToken match {
     case Some(idt) => Map("id_token" -> idt)
     case None => Map.empty[String, String]

@@ -1,7 +1,2 @@
-resolvers += "Web plugin repo" at "http://siasia.github.com/maven2"
 
-//    "scct-repo" at "http://mtkopone.github.com/scct/maven-repo/"
-
-//addSbtPlugin("reaktor" % "scct-sbt-for-2.9" % "0.1-SNAPSHOT")
-
-addSbtPlugin("com.github.siasia" %% "xsbt-web-plugin" % "0.1.2")
+libraryDependencies <+= sbtVersion(v => "com.github.siasia" %% "xsbt-web-plugin" % (v+"-0.2.11"))
