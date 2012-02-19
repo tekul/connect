@@ -1,6 +1,6 @@
 package connect.tokens
-import unfiltered.oauth2._
 import connect.Logger
+import connect.oauth2.{Client, ResourceOwner, Token}
 
 
 case class AppToken(value: String, clientId: String, scopes: Seq[String],

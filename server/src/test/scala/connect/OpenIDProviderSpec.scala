@@ -13,12 +13,12 @@ class OpenIDProviderSpec extends Specification {
   "An OpenIDProvider" should {
     "validate its own tokens" in {
       val token = provider.generateIdToken("owner", "client", Seq("openid"))
-
       val claims = provider.checkIdToken(token.get)
 
       claims \ "error" must_== JNothing
     }
   }
 
+  // TODO: Write tests based on sections of the spec
 
 }

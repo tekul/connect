@@ -1,10 +1,10 @@
 package connect
 
-import unfiltered.oauth2.{Client, ClientStore}
+import connect.oauth2.{Client, ClientStore}
 
 case class AppClient(id: String, secret: String, redirectUri: String) extends Client
 
-trait Clients extends ClientStore {
+class Clients extends ClientStore {
   val clients = new java.util.HashMap[String, Client] {
     put(
       "exampleclient",

@@ -1,9 +1,5 @@
 package connect
 
-import openid.OpenIDProvider
-import unfiltered.jetty.Server
-import unfiltered.request._
-import unfiltered.oauth2._
 import connect.util.ReplPlan
 import unfiltered.filter.Plan
 import unfiltered.response.Pass

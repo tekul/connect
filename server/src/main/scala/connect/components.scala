@@ -1,9 +1,11 @@
 package connect
 
-import openid._
+import connect.oauth2._
+import connect.openid._
 import unfiltered.filter.Plan
-import unfiltered.oauth2._
+
 import unfiltered.request.HttpRequest
+
 import net.liftweb.json._
 import net.liftweb.json.Extraction._
 import net.liftweb.json.Printer.compact
@@ -14,6 +16,7 @@ import crypto.sign.RsaSigner
 import crypto.sign.RsaVerifier
 import connect.tokens._
 import connect.boot.ComponentRegistry
+import unfiltered.response.Pass
 
 // Cake-pattern-(ish) application configuration.
 
@@ -33,7 +36,7 @@ trait TokenRepositoryComponent {
 
 trait TokenStoreComponent { this: OpenIDProviderComponent with TokenRepositoryComponent =>
 
-  trait TokenStoreDelegator extends TokenStore with Logger {
+  class TokenStoreDelegator extends TokenStore with Logger {
     def refresh(other: Token): Token = tokenRepo.refresh(other)
 
     def token(code: String) = tokenRepo.codeToken(code)
@@ -68,10 +71,6 @@ trait AccessTokenReaderComponent {
   trait AccessTokenReader {
     def accessToken(value: String): Option[Token]
   }
-}
-
-trait OAuth2ServerComponent {
-  def authorizationServer: AuthorizationServer
 }
 
 /**
@@ -118,6 +117,10 @@ trait TokenVerifierComponent {
 
 
 trait OpenIDProviderComponent { this: TokenSignerComponent with TokenVerifierComponent =>
+  /**
+   * The name of the OpenID Provider, which will be used in the "iss" JWT field.
+   */
+  def providerName: String
   def openIDProvider: OpenIDProvider
 
   class StdOpenIDProvider extends OpenIDProvider with Logger {
@@ -129,7 +132,7 @@ trait OpenIDProviderComponent { this: TokenSignerComponent with TokenVerifierCom
     def generateIdToken(owner: String, clientId: String, scopes: Seq[String]) = {
       if (scopes.contains("openid")) {
         val expiry = System.currentTimeMillis()/1000 + 600
-        val claims = Map("iss" -> "CFID", "user_id" -> owner, "aud" -> clientId,"exp" -> expiry)
+        val claims = Map("iss" -> providerName, "user_id" -> owner, "aud" -> clientId,"exp" -> expiry)
         val jwt = Jwt(compact(render(decompose(claims))), tokenSigner)
       // Optionals iso29115, nonce, issued_to
         logger.debug("id_token is " + jwt)
@@ -173,18 +176,13 @@ trait UserInfoServiceComponent {
   def userInfoService: UserInfoService
 }
 
-
 // Web Plan Components
 
 /**
  * Provides the OAuth2 end points
  */
-trait OAuth2WebComponent { this: OAuth2ServerComponent =>
+trait OAuth2WebComponent {
   def oauth2Plan: Plan
-
-  class StdOAuth2Plan extends OAuthorization(authorizationServer) {
-    require(authorizationServer != null);
-  }
 }
 
 /**
@@ -238,7 +236,6 @@ class ConnectComponentRegistry extends OAuth2WebComponent with ComponentRegistry
   with AuthenticationWebComponent
   with UserInfoComponent
   with TokenAuthorizationWebComponent
-  with OAuth2ServerComponent
   with UserInfoServiceComponent
   with OpenIDProviderComponent
   with TokenSignerComponent
@@ -249,17 +246,19 @@ class ConnectComponentRegistry extends OAuth2WebComponent with ComponentRegistry
   with TokenStoreComponent
   with TokenRepositoryComponent {
 
-  override val oauth2Plan = new StdOAuth2Plan
+  override val providerName = "OpenIDConnectTest"
+  val authorizationEndpoint = new AuthorizationEndpoint(clientStore, new TokenStoreDelegator, new OAuth2Service)
+  val tokenEndpoint = new TokenEndpoint(clientStore, new TokenStoreDelegator)
+  override val oauth2Plan = new Plan {
+    def intent = Pass.onPass(authorizationEndpoint.intent, tokenEndpoint.intent)
+  }
   override lazy val userInfoPlan = new StdUserInfoPlan
   override lazy val tokenAuthorizationPlan = new StdTokenAuthorizationPlan
   override val authenticationPlan = new AuthenticationPlan
   override lazy val openIDProvider = new StdOpenIDProvider
   override val tokenSigner = RsaSigner(ServerKey.n, ServerKey.e)
   override val tokenVerifier = RsaVerifier(ServerKey.n, 65537)
-  lazy val authorizationServer = new AuthorizationServer with Clients with TokenStoreDelegator with OAuth2Service {
-    val openidProvider = openIDProvider
-  }
-  override lazy val clientStore = authorizationServer
+  override lazy val clientStore = new Clients
   override lazy val tokenAuthenticator = new StdTokenAuthenticator
   override lazy val userInfoService = TestUsers
   override val tokenRepo = new InMemoryTokenRepository

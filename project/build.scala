@@ -33,6 +33,8 @@ object Dependencies {
   val logbackVersion = "0.9.28"
   val slf4jVersion   = "1.6.1"
 
+//  val servletApi = "javax.servlet" % "servlet-api" % "2.5" % "provided"
+
   val scalaTest  = "org.scalatest" %% "scalatest" % "1.6.1" % "test"
   val mockito    = "org.mockito" % "mockito-all" % "1.8.5" % "test"
   val junit      = "junit" % "junit" % "4.8.2" % "test"
@@ -50,9 +52,7 @@ object Dependencies {
   val ufDeps = Seq(
     "net.databinder" %% "unfiltered-filter" % ufversion,
     "net.databinder" %% "unfiltered-json" % ufversion intransitive(),
-    "net.databinder" %% "unfiltered-oauth2" % ufversion,
-
-    "net.databinder" %% "unfiltered-jetty" % ufversion % "runtime",
+    "net.databinder" %% "unfiltered-jetty" % ufversion,
     "net.databinder" %% "unfiltered-spec" % ufversion % "test"
   )
 
@@ -100,5 +100,15 @@ object ConnectBuild extends Build {
       libraryDependencies ++= testDeps ++ loggingDeps ++ Seq(lift_json) ++ dispatchDeps ++ ufDeps
     )
   ) dependsOn(jwt)
+
+  {
+    val f : State => State = { (s: State) =>
+      println (s.remainingCommands)
+      s.copy(
+        remainingCommands = s.remainingCommands ++ Seq("project jwt")
+      )
+    }
+    onUnload in Global ~= (f compose _)
+  }
 
 }

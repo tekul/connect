@@ -3,12 +3,11 @@ package connect.openid
 import connect.Logger
 
 import unfiltered.request._
-import unfiltered.response.Json._
 import unfiltered.response._
 import unfiltered.filter.Plan
 import unfiltered.filter.request.ContextPath
-import unfiltered.oauth2.OAuthIdentity
 import net.liftweb.json.JsonAST.JValue
+import connect.oauth2.OAuthIdentity
 
 object OpenID {
   /**

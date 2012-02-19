@@ -7,8 +7,6 @@ import dispatch._
 import dispatch.liftjson.Js._
 import net.liftweb.json._
 
-import unfiltered.oauth2.OAuthorization._
-
 /**
  */
 class App extends Templates with unfiltered.filter.Plan {
@@ -32,7 +30,7 @@ class App extends Templates with unfiltered.filter.Plan {
   }
 
   def intent = {
-    // if we have an access token on hand, make a user info endpoint call
+    // if we have an access token on hand, make a user info endpoint call and parse the returned JSON
     // if not, render the current list of tokens
     case GET(Path("/") & AuthorizedToken(at)) =>
       try {
@@ -57,8 +55,8 @@ class App extends Templates with unfiltered.filter.Plan {
         code <- lookup("code") is
           required("code is required") is nonempty("code can not be blank")
       } yield {
-        val postParams = Map(GrantType -> AuthorizationCode, Code -> code.get, ClientSecret -> "secret",
-                             ClientId -> client_id, RedirectURI -> redirect_uri)
+        val postParams = Map("grant_type" -> "authorization_code", "code" -> code.get, "client_secret" -> "secret",
+                             "client_id" -> client_id, "redirect_uri" -> redirect_uri)
         // Make an access token request and create a token from the returned JSON
         val accessToken = Http(svc / "token" << postParams ># { AccessToken(_) })
         println("Retrieved access token response: " + accessToken)

@@ -4,12 +4,12 @@ import unfiltered.request._
 import unfiltered.response._
 import unfiltered.Cookie
 
-import unfiltered.oauth2.{Client, ResourceOwner, RequestBundle}
+import connect.oauth2.{Client, ResourceOwner, RequestBundle}
 
 import Templates._
 
 
-trait OAuth2Service extends unfiltered.oauth2.Service {
+class OAuth2Service extends connect.oauth2.Service {
   val ApproveKey = "Approve"
   val DenyKey = "Deny"
 

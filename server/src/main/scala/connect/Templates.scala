@@ -3,7 +3,7 @@ package connect
 
 object Templates {
   import unfiltered.response._
-  import unfiltered.oauth2.{RequestBundle}
+  import connect.oauth2.{RequestBundle}
 
   def page(body: scala.xml.NodeSeq) = Html(
     <html>
