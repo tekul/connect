@@ -5,33 +5,20 @@ import unfiltered.response._
 import unfiltered.filter.Plan
 
 /**
- * After your application has obtained an access token, your app can use it to access APIs by
- * including it in either an access_token query parameter or an Authorization: Beader header.
+ * Plan which can be used in front of an oauth protected resource
+ * to authenticate the access token supplied by the client.
  *
- * To call API using HTTP header.
+ * This will typically be a bearer token:
  *
- *     GET /api/1/feeds.js HTTP/1.1
+ *     GET /api/blah HTTP/1.1
  *     Host: www.example.com
  *     Authorization: Bearer vF9dft4qmT
  */
-case class Protection(source: AuthSource) extends ProtectionLike {
-  /** List or ResourceServer token schemes. By default,
-   *  this includes BearerAuth which extracts Bearer tokens for a header,
-   *  QParamBeaerAuth which extracts Bearer tokens request params and
-   *  MacAuth which extracts tokens from using the `Mac` authentication encoding */
-  val schemes = Seq(BearerAuth, QParamBearerAuth/*, MacAuth*/)
-}
-
-/** Provides OAuth2 protection implementation.
- *  Extend this trait to customize query string `oauth_token`, etc. */
-trait ProtectionLike extends Plan {
+class OAuth2Protection(source: AuthorizationSource) extends Plan {
   import javax.servlet.http.HttpServletRequest
 
-  /** Provides a means of verifying a deserialized access token */
-  val source: AuthSource
-
   /** Provides a list of schemes used for decoding access tokens in request */
-  val schemes: Seq[AuthScheme]
+  val schemes = Seq(BearerAuth, QParamBearerAuth/*, MacAuth*/)
 
   final def intent = ((schemes map { _.intent(this) }) :\ fallback) { _ orElse _ }
 
@@ -55,31 +42,33 @@ trait ProtectionLike extends Plan {
     }
 }
 
-/** Represents the authorization source that issued the access token. */
-trait AuthSource {
-  /** Given an deserialized access token and request, extract the resource owner, client id, and list of scopes
-   *  associated with the request, if there is an error return it represented as a string message
-   *  to return the the oauth client */
+/**
+ * Represents the authorization source that issued the access token.
+ *
+ * Used by the resource server to authenticate an access token submitted by a client.
+ * This might involve the use of shared storage (where the resource and authorization servers
+ * are colocated), or the use of signed/encrypted tokens containing the required information.
+ */
+trait AuthorizationSource {
+  /**
+   * Given a deserialized access token and request, extract the resource owner, client id, and list of scopes
+   * associated with the request, if there is an error return it represented as a string message
+   * to return the the oauth client */
   def authenticateToken[T](
     token: AccessToken,
     request: HttpRequest[T]): Either[String, (ResourceOwner, String, Seq[String])]
-
-  /**
-   * Auth sources which
-   */
-  def realm: Option[String] = None
 }
 
 /** Represents the scheme used for decoding access tokens from a given requests. */
 trait AuthScheme {
 
-  def intent(protection: ProtectionLike): Plan.Intent
+  def intent(protection: OAuth2Protection): Plan.Intent
 
   def errorString(status: String, description: String) =
     """error="%s" error_description="%s" """.trim format(status, description)
 
-  /** The WWW-Authenticate challege returned to the clien tin a 401 response
-   *  for invalid requests */
+  /**
+   * The WWW-Authenticate challege returned to the client in a 401 response for invalid requests */
   val challenge: String
 
   /**
@@ -134,7 +123,7 @@ trait BearerAuth extends AuthScheme {
     }
   }
 
-  def intent(protection: ProtectionLike) = {
+  def intent(protection: OAuth2Protection) = {
     case Authorization(BearerHeader(token)) & request =>
       protection.authenticate(BearerToken(token), request) { failedAuthenticationResponse }
   }
@@ -143,7 +132,7 @@ trait BearerAuth extends AuthScheme {
 object BearerAuth extends BearerAuth {}
 
 /** Represents Bearer auth encoded in query params.
- *  ses also http://tools.ietf.org/html/draft-ietf-oauth-v2-bearer-14 */
+ *  see also http://tools.ietf.org/html/draft-ietf-oauth-v2-bearer-14 */
 trait QParamBearerAuth extends AuthScheme {
   val challenge = "Bearer"
   val defaultQueryParam = "access_token"
@@ -153,7 +142,7 @@ trait QParamBearerAuth extends AuthScheme {
     def unapply(params: Map[String, Seq[String]]) = params(queryParam).headOption
   }
 
-  def intent(protection: ProtectionLike) = {
+  def intent(protection: OAuth2Protection) = {
     case Params(BearerParam(token)) & request =>
       protection.authenticate(BearerToken(token), request) { failedAuthenticationResponse }
   }

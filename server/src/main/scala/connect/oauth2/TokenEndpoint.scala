@@ -82,7 +82,7 @@ class TokenEndpoint(clients: ClientStore, tokenStore: TokenStore) extends unfilt
         code          <- lookup(Code) is optional[String, String]
         clientId      <- lookup(ClientId) is required(requiredMsg(ClientId))
         redirectURI   <- lookup(RedirectURI) is optional[String, String]
-        // clientSecret is not recommended to be passed as a parameter by instead
+        // clientSecret is not recommended to be passed as a parameter but instead
         // encoded in a basic auth header http://tools.ietf.org/html/draft-ietf-oauth-v2-16#section-3.1
         clientSecret  <- lookup(ClientSecret) is required(requiredMsg(ClientSecret))
         refreshToken  <- lookup(RefreshToken) is optional[String, String]
@@ -126,7 +126,7 @@ class TokenEndpoint(clients: ClientStore, tokenStore: TokenStore) extends unfilt
                 )
             }
           case unsupported =>
-            // note the oauth2 spec does allow for extention grant types,
+            // note the oauth2 spec does allow for extension grant types,
             // this implementation currently does not
             errorResponder(
               UnsupportedGrantType, "%s is unsupported" format unsupported,

@@ -78,9 +78,9 @@ trait AccessTokenReaderComponent {
  * against those in the token store.
  */
 trait TokenAuthenticationComponent { this: AccessTokenReaderComponent with ClientStoreComponent =>
-  def tokenAuthenticator: AuthSource
+  def tokenAuthenticator: AuthorizationSource
 
-  class StdTokenAuthenticator extends AuthSource with Logger {
+  class StdTokenAuthenticator extends AuthorizationSource with Logger {
     def authenticateToken[T](token: AccessToken, request: HttpRequest[T]): Either[String, (ResourceOwner, String, Seq[String])] = {
       logger.debug("Authenticating token " +  token)
       token match {
@@ -196,9 +196,9 @@ trait AuthenticationWebComponent {
  * Provides a resource protection layer for access-token validation
  */
 trait TokenAuthorizationWebComponent { this: TokenAuthenticationComponent =>
-  def tokenAuthorizationPlan: ProtectionLike
+  def tokenAuthorizationPlan: OAuth2Protection
 
-  final class StdTokenAuthorizationPlan extends Protection(tokenAuthenticator)
+  final class StdTokenAuthorizationPlan extends OAuth2Protection(tokenAuthenticator)
 }
 
 /**
