@@ -210,6 +210,13 @@ trait UserInfoComponent { this: UserInfoServiceComponent =>
   class StdUserInfoPlan extends UserInfoPlan(userInfoService) with DefaultUserInfoEndPoint
 }
 
+trait CheckIdComponent { this: OpenIDProviderComponent =>
+  def checkIdPlan: Plan
+
+  class StdCheckIdPlan extends CheckIdPlan(openIDProvider) with DefaultCheckIdEndPoint
+}
+
+
 object ServerKey {
   val n = BigInt("2524288480257888199556255116655542805598393034290055663431253555094618663541459985" +
                                 "5793628180675586330233507173840470187695708486563026571606062758924232350260463016" +
@@ -235,6 +242,7 @@ object ServerKey {
 class ConnectComponentRegistry extends OAuth2WebComponent with ComponentRegistry
   with AuthenticationWebComponent
   with UserInfoComponent
+  with CheckIdComponent
   with TokenAuthorizationWebComponent
   with UserInfoServiceComponent
   with OpenIDProviderComponent
@@ -253,6 +261,7 @@ class ConnectComponentRegistry extends OAuth2WebComponent with ComponentRegistry
     def intent = Pass.onPass(authorizationEndpoint.intent, tokenEndpoint.intent)
   }
   override lazy val userInfoPlan = new StdUserInfoPlan
+  override lazy val checkIdPlan = new StdCheckIdPlan
   override lazy val tokenAuthorizationPlan = new StdTokenAuthorizationPlan
   override val authenticationPlan = new AuthenticationPlan
   override lazy val openIDProvider = new StdOpenIDProvider

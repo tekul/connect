@@ -2,12 +2,11 @@ package connect.openid
 
 import connect.Logger
 
-import unfiltered.request._
 import unfiltered.response._
 import unfiltered.filter.Plan
 import unfiltered.filter.request.ContextPath
 import net.liftweb.json.JsonAST.JValue
-import connect.oauth2.OAuthIdentity
+import connect.oauth2._
 
 object OpenID {
   /**
@@ -79,11 +78,13 @@ abstract class UserInfoPlan(userInfoService: UserInfoService) extends Plan with 
 abstract class CheckIdPlan(openIdProvider: OpenIDProvider) extends Plan with CheckIdEndPoint with Logger {
   implicit val formats = Serialization.formats(NoTypeHints)
 
+  private def checkToken(idToken: String) = Json(openIdProvider.checkIdToken(idToken))
+
   def intent = {
-    case ContextPath(_, CheckIdPath) & Params(params) =>
-      params(IdToken) match {
-        case Seq(id_token) => Json(openIdProvider.checkIdToken(id_token))
-        case Nil => Json(("error" -> "missing id_token"))
-      }
+    case req @ ContextPath(_, CheckIdPath) => req match {
+      case BearerAuth(idToken)    => checkToken(idToken)
+      case ParamTokenAuth(idToken) => checkToken(idToken)
+      case _ => Unauthorized ~> WWWAuthenticate("Bearer")
+    }
   }
 }

@@ -12,6 +12,7 @@ class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
   object Config extends ConnectComponentRegistry
 
   def setup = _.filter(Config.oauth2Plan)
+                .filter(Config.checkIdPlan)
                 .filter(Config.authenticationPlan)
                 .filter(Config.tokenAuthorizationPlan)
                 .filter(Config.userInfoPlan)
@@ -20,6 +21,7 @@ class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
   val authorize = host / "authorize"
   val token = host / "token"
   val userInfo = host / "userinfo"
+  val checkId = host / "check_id"
   val cookies = new BasicCookieStore
 
   override def http[T](handler: Handler[T]): T = {
@@ -97,16 +99,24 @@ class OpenIDServerSpec extends Specification with unfiltered.spec.jetty.Served {
         })
 
       // Decode the idToken claims
-      val claims = parse(Jwt(idToken).claims).extract[Map[String,String]]
+      val claims = parse(Jwt(idToken).claims)
+      // claims.extract[Map[String,String]]
+
+      // Do the same using the check_id endpoint and check we get the same
+      // http://openid.net/specs/openid-connect-standard-1_0.html#check_id_ep
+      // id_token is submitted as the access_token
+
+        parse(http(checkId <:< bearerAuth(idToken) as_str)) must_== claims
 
       // Client posts request to the user info endpoint with the access token
-
-      val uinfo = http(userInfo <:< Map("Authorization" -> ("Bearer " + accessToken)) as_str)
+      val uinfo = http(userInfo <:< bearerAuth(accessToken) as_str)
       // TODO: Check response header for content type json/jwt
 
       parse(uinfo)
 
-      println(uinfo)
+//      println(uinfo)
     }
   }
+
+  def bearerAuth(token: String) = Map("Authorization" -> ("Bearer " + token))
 }

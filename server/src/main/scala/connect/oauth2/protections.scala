@@ -1,8 +1,8 @@
 package connect.oauth2
 
-import unfiltered.request._
 import unfiltered.response._
 import unfiltered.filter.Plan
+import unfiltered.request._
 
 /**
  * Plan which can be used in front of an oauth protected resource
@@ -18,7 +18,7 @@ class OAuth2Protection(source: AuthorizationSource) extends Plan {
   import javax.servlet.http.HttpServletRequest
 
   /** Provides a list of schemes used for decoding access tokens in request */
-  val schemes = Seq(BearerAuth, QParamBearerAuth/*, MacAuth*/)
+  val schemes = Seq(BearerAuthentication, ParamTokenAuthentication/*, MacAuth*/)
 
   final def intent = ((schemes map { _.intent(this) }) :\ fallback) { _ orElse _ }
 
@@ -102,53 +102,36 @@ trait AuthScheme {
   }
 }
 
-trait AccessToken
+sealed trait AccessToken
 
 case class BearerToken(value: String) extends AccessToken
 
-/** Represents Bearer auth encoded in a header.
- *  see also http://tools.ietf.org/html/draft-ietf-oauth-v2-bearer-14 */
-trait BearerAuth extends AuthScheme {
+
+
+/**
+ */
+sealed trait BearerAuthentication extends AuthScheme {
   val challenge = "Bearer"
-  val defaultBearerHeader = """Bearer ([\w\d!#$%&'\(\)\*+\-\.\/:<=>?@\[\]^_`{|}~\\,;]+)""".r
-
-  /** bearer header format */
-  def header = defaultBearerHeader
-
-  object BearerHeader {
-    val HeaderPattern = header
-    def unapply(hval: String) = hval match {
-      case HeaderPattern(token) => Some(token)
-      case _ => None
-    }
-  }
 
   def intent(protection: OAuth2Protection) = {
-    case Authorization(BearerHeader(token)) & request =>
+    case BearerAuth(token) & request =>
       protection.authenticate(BearerToken(token), request) { failedAuthenticationResponse }
   }
 }
 
-object BearerAuth extends BearerAuth {}
+object BearerAuthentication extends BearerAuthentication {}
 
-/** Represents Bearer auth encoded in query params.
- *  see also http://tools.ietf.org/html/draft-ietf-oauth-v2-bearer-14 */
-trait QParamBearerAuth extends AuthScheme {
+
+sealed trait ParamTokenAuthentication extends AuthScheme {
   val challenge = "Bearer"
-  val defaultQueryParam = "access_token"
-  def queryParam = defaultQueryParam
-
-  object BearerParam {
-    def unapply(params: Map[String, Seq[String]]) = params(queryParam).headOption
-  }
 
   def intent(protection: OAuth2Protection) = {
-    case Params(BearerParam(token)) & request =>
+    case ParamTokenAuth(token) & request =>
       protection.authenticate(BearerToken(token), request) { failedAuthenticationResponse }
   }
 }
 
-object QParamBearerAuth extends QParamBearerAuth {}
+object ParamTokenAuthentication extends ParamTokenAuthentication {}
 
 /** Represents MAC auth. */
 //trait MacAuth extends AuthScheme {
